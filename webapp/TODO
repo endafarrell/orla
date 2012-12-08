@@ -1,0 +1,18 @@
+* Getting Endomondo: done
+* Get the direct messages for endafarrell_med: done
+* Save to disk _all_ the uploaded files
+* Separate the uploading of from the processing of the uploaded files
+* Find a decent way of "drawing" the results
+* Get the comments in the endomondo results
+* Cleanup the SmartPix API uploader servlet code (you can't read a stream twice :-( )
+* The comments in an Enodmondo run are _not_ stored with the run. They _are_ available on the profile page but have to
+  be stitched together to the runs later :-/
+* When re-loading the SmartPix, state the overlap point.
+* There are loads of dupes in the db. Find out why. Stop that happening again. Remove them/rebuild the lot.
+* Add a time-range to the getEvents code.
+* Add numRows, changes, timestamp feed (from monitor) to the UI as a visual reminder of what's there.
+* No longer Endomondo - time to use the other one.
+* Need to manually add the last few runs to the DB
+
+
+1/ Get the 70-percentile by hour of day for the last 3 months
