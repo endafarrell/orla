@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<%@ page import="endafarrell.orla.service.Event" %><!DOCTYPE HTML>
 <html>
 <head>
     <title>Orla - diabetes diary</title>
@@ -111,7 +111,7 @@
         }
 
         td.day {
-            width: 7em;
+            width: 8em;
         }
 
         td.Mon, td.Tue, td.Wed, td.Thu, td.Fri {
@@ -170,9 +170,14 @@
         <table class="width:100%">
             {{each days}}
             <tr class="day ${day}" id="events_${date}">
-                <td class="day ${day}"><p>${day}</p>
-
-                    <p>${date}</p></td>
+                <td class="day ${day}">
+                    <p>${day}</p>
+                    <p>${date}</p>
+                    <p class="time">carbs: ${carbs}g</p>
+                    <p class="time">bolus: ${bolus}IU</p>
+                    <p class="time">IU/10g: ${IU_10g}</p>
+                    <p class="time">total: ${<%=Event.BOLUS_PLUS_BASAL%>}</p>
+                </td>
                 <td class="dayDetails">
                     {{each events}}
                     <div style="padding-left:${5*time_pct}px;">
@@ -180,9 +185,9 @@
                         <span class="time">${date.split(" ")[1]}</span><span class="${unit}">${text}</span>
                         {{else}}
                         {{if unit == "mmol_L"}}
-                        <span class="time">${date.split(" ")[1]}</span><span class="${unit}">${value}</span>
+                        <span class="time">${date.split(" ")[1]}</span><span class="${unit}">${value}</span><span class="unit">mmol/L</span>
                         {{else}}
-                        <span class="time">${date.split(" ")[1]}</span>${value}${unit} ${text}</span>
+                        <span class="time">${date.split(" ")[1]}</span>${value}<span class="unit">${unit}</span> ${text}</span>
                         {{/if}}
                         {{/if}}
                     </div>
@@ -197,7 +202,7 @@
 <nav>&laquo;
     <ul>
         <li><a rel="home" href="index.jsp">home</a></li>
-        <li><a href="graph.jsp?m=3&l=25&h=75">graphs</a></li>
+        <li><a href="graph.jsp?w=4&l=25&h=75">graphs</a></li>
         <li>&crarr;</li>
         <li><a href="smartpix.jsp">add SmartPix</a></li>
         <li><a href="api/home/endomondo">check exercise</a></li>

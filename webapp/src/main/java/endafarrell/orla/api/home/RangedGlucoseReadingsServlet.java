@@ -21,11 +21,11 @@ public class RangedGlucoseReadingsServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        int months = 3;
+        int weeks = 4;
         int lower = 25;
         int higher = 75;
         try {
-            months = Integer.valueOf(req.getParameter("m"));
+            weeks = Integer.valueOf(req.getParameter("w"));
         } catch (Exception ignored) {
         }
 
@@ -40,6 +40,6 @@ public class RangedGlucoseReadingsServlet extends HttpServlet {
         }
 
         res.setContentType("application/json");
-        orla.writeGlucoseReadings(res.getOutputStream(), months, lower, higher);
+        orla.writeGlucoseReadings(res.getOutputStream(), weeks, lower, higher);
     }
 }

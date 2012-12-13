@@ -9,6 +9,7 @@ import endafarrell.orla.service.data.persistence.Database;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
 import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
@@ -16,6 +17,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.joda.time.DateTime;
 import org.joda.time.Months;
 import org.joda.time.ReadablePeriod;
+import org.joda.time.Weeks;
 import org.xml.sax.SAXException;
 
 import javax.servlet.ServletOutputStream;
@@ -136,35 +138,63 @@ public class Orla {
     public void writeEventsByDayAsJson(ServletOutputStream outputStream) throws IOException {
         ArrayList<Event> eventsList = new ArrayList<Event>(events);
         Collections.sort(eventsList);
-        //Collections.reverse(eventsList);
 
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
         ArrayNode dayEvents = JsonNodeFactory.instance.arrayNode();
         dayNode.put("events", dayEvents);
+        Integer carbs = 0;
+        Double bolus = 0d;
         dayNode.put("day", Event.dayFormat.format(eventsList.get(0).date));
         dayNode.put("date", Event.dateFormat.format(eventsList.get(0).date));
         Event previous = null;
         for (Event event : eventsList) {
             if (event.sameDayAs(previous)) {
-                dayEvents.add(event.toJson());
+                if (Event.BOLUS_PLUS_BASAL.equals(event.text)) {
+                    dayNode.put(Event.BOLUS_PLUS_BASAL, round(event.value.doubleValue(),2));
+                } else {
+                    System.err.println(Event.BOLUS_PLUS_BASAL + " " + event.text + " " + Event.BOLUS_PLUS_BASAL.equals(event.text));
+                    dayEvents.add(event.toJson());
+                }
+                if (event.unit == Event.Unit.g) {
+                    carbs += event.value.intValue();
+                }
+                if (event.unit == Event.Unit.IU && Event.BOLUS.equals(event.text)) {
+                    bolus += event.value.doubleValue();
+                }
             } else {
+                // Not the same day, therefore decorate and add the dayNode to the arrayNode
+                dayNode.put("carbs", carbs);
+                dayNode.put("bolus", round(bolus, 1));
+                dayNode.put("IU_10g", round(bolus * 10 / carbs,1));
                 arrayNode.add(dayNode);
+                // And reset
                 dayNode = JsonNodeFactory.instance.objectNode();
                 dayEvents = JsonNodeFactory.instance.arrayNode();
                 dayNode.put("events", dayEvents);
                 dayNode.put("day", Event.dayFormat.format(event.date));
                 dayNode.put("date", Event.dateFormat.format(event.date));
                 dayEvents.add(event.toJson());
+                carbs = 0;
+                bolus = 0d;
             }
             previous = event;
         }
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    public void writeGlucoseReadings(ServletOutputStream outputStream, int months, int lower, int higher) throws IOException {
+    private double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
+
+    public void writeGlucoseReadings(ServletOutputStream outputStream, int weeks, int lower, int higher) throws IOException {
         ArrayList<Event> eventsList = new ArrayList<Event>(events);
-        eventsList = last(eventsList, Months.months(months));
+        eventsList = last(eventsList, Weeks.weeks(weeks));
         eventsList = percentiles(eventsList, Event.Unit.mmol_L, lower, higher);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for (Event event : eventsList) {

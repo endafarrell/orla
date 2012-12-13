@@ -167,7 +167,7 @@
     <ul>
         <li><a rel="home" href="index.jsp">home</a></li>
         <li>&crarr;</li>
-        <li><a href="api/home/glucose?m=3&l=25&h=75">glucose readings</a></li>
+        <li><a href="api/home/glucose?w=4&l=25&h=75">glucose readings</a></li>
     </ul>
     &raquo;</nav>
 <section>

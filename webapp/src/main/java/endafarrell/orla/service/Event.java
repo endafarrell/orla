@@ -12,6 +12,10 @@ public class Event implements Comparable<Event> {
     public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     public static final SimpleDateFormat dayFormat = new SimpleDateFormat("EEE");
 
+    public static final String BASAL = "basal";
+    public static final String BOLUS = "bolus";
+    public static final String BOLUS_PLUS_BASAL = "Bolus_plus_Basal";
+
     public enum Source {
         SmartPix,
         Twitter,
@@ -25,9 +29,9 @@ public class Event implements Comparable<Event> {
          */
         mmol_L,
         /**
-         * percent, used for HbA1C readings
+         * grams, used for carbs
          */
-        pct,
+        g,
         /**
          * U100 insulin units, used for injections
          */
@@ -37,13 +41,13 @@ public class Event implements Comparable<Event> {
          */
         km,
         /**
-         * grams, used for carbs
-         */
-        g,
-        /**
          * For when there's no value: eg tweets
          */
-        none
+        none,
+        /**
+         * percent, used for HbA1C readings
+         */
+        pct
     }
 
     public final Date date;
@@ -69,7 +73,6 @@ public class Event implements Comparable<Event> {
      * @param that The "other" being compared.
      * @return +1 if this event is newer than the "other"
      */
-    @Override
     public int compareTo(Event that) {
         int dateBased = this.date.compareTo(that.date);
         if (dateBased != 0) return dateBased;

@@ -3,6 +3,7 @@ package endafarrell.orla.service.data.parser;
 import endafarrell.orla.service.Event;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.text.ParseException;
@@ -37,6 +38,7 @@ public class SmartPixSaxHandler extends DefaultHandler {
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+        System.out.println(qName);
         try {
             if ("BG".equals(qName)) {
                 String dt = attributes.getValue("Dt");
@@ -52,9 +54,42 @@ public class SmartPixSaxHandler extends DefaultHandler {
                     events.add(new Event(date, Event.Source.SmartPix, "carb", new Integer(carb), Event.Unit.g));
                 }
             }
+            // <BOLUS Dt="2012-12-08" Tm="13:32" type="Std" amount="5.30" cmd="1" />
+            if ("BOLUS".equals(qName)) {
+                String type = attributes.getValue("type");
+
+                if ("Std".equals(type)) {
+                    String dt = attributes.getValue("Dt");
+                    String tm = attributes.getValue("Tm");
+                    Date date = dateFormat.parse(dt + tm);
+                    String amount = attributes.getValue("amount");
+                    events.add(new Event(date, Event.Source.SmartPix, Event.BOLUS, new Double(amount), Event.Unit.IU));
+                }
+
+                if ("Bolus+Basal Total".equals(attributes.getValue("remark"))) {
+                    String dt = attributes.getValue("Dt");
+                    Date date = dateFormat.parse(dt + "00:00");
+                    String amount = attributes.getValue("amount");
+                    events.add(new Event(date, Event.Source.SmartPix, Event.BOLUS_PLUS_BASAL, new Double(amount), Event.Unit.IU));
+                } else {
+                    System.err.println(attributes.getValue("remark"));
+                }
+            }
+
         } catch (ParseException e) {
+            e.printStackTrace();
             throw new SAXException(e);
         }
+    }
+
+    @Override
+    public void warning(SAXParseException e) throws SAXException {
+        e.printStackTrace();
+    }
+
+    @Override
+    public void error(SAXParseException e) throws SAXException {
+        e.printStackTrace();
     }
 
     public ArrayList<Event> getEvents() {
