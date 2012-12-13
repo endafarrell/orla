@@ -161,6 +161,21 @@
     <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
     <script type="text/javascript" src="js/jquery.flot.js"></script>
+    <script type="text/javascript">
+        (function($) {
+            $.QueryString = (function(a) {
+                if (a == "") return {};
+                var b = {};
+                for (var i = 0; i < a.length; ++i)
+                {
+                    var p=a[i].split('=');
+                    if (p.length != 2) continue;
+                    b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+                }
+                return b;
+            })(window.location.search.substr(1).split('&'))
+        })(jQuery);
+    </script>
 </head>
 <body>
 <nav>&laquo;
@@ -171,31 +186,78 @@
     </ul>
     &raquo;</nav>
 <section>
-    <p>Percentiled values</p>
+    <div class="graph">
+        <h3>Percentiled values</h3>
 
-    <div id="ph1" style="width:90%; height:300px;"></div>
-    <p>Percentiled values by hour of day</p>
+        <div id="ph1" style="width:90%; height:300px;"></div>
+        <p>The above are the readings within the <span id="ph1LowerPercentile"></span> and
+           <span id="ph1HigherPercentile"></span> percentiles. By chopping off the lowest and highest readings, overall
+           patterns are easier to see.</p>
+    </div>
+    <div class="graph">
+        <h3>Percentiled values by hour of day</h3>
 
-    <div id="ph2" style="width:90%; height:300px;"></div>
+        <div id="ph2" style="width:90%; height:300px;"></div>
+    </div>
+    <div class="graph">
+        <h3>Carbs and bolus per day</h3>
+        <div id="ph3" style="width: 90%; height:300px;"></div>
+    </div>
 </section>
 <footer>&laquo;footer&raquo;</footer>
 <script type="text/javascript">
-    var hourMean = [];
+
+
+
     $(document).ready(function () {
+        $("#ph1LowerPercentile").html($.QueryString["l"]);
+        $("#ph1HigherPercentile").html($.QueryString["h"]);
+        var plots = [];
         var data = [];
         var hours = {};
+        var hourMean = [];
         hourLabels = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11",
             "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"];
         for (index in hourLabels) {
             console.log("index in hourLabels", index);
             hours[hourLabels[index]] = [];
         }
+        var flotOptions = {
+            xaxis:{ mode:"time" },
+            grid:{ hoverable:true, clickable:true},
+            yaxis:{ labelWidth:70},
+            points: { show: true },
+            lines: { show: true }
+        };
+        function showTooltip(x, y, contents) {
+                $('<div id="tooltip">' + contents + '</div>').css( {
+                    position: 'absolute',
+                    display: 'none',
+                    top: y + 5,
+                    left: x + 5,
+                    border: '1px solid #fdd',
+                    padding: '2px',
+                    'background-color': '#fee',
+                    opacity: 0.80
+                }).appendTo("body").fadeIn(200);
+        }
+        function carbsFormatter(v, axis) {
+            return v.toFixed(axis.tickDecimals) +"g";
+        }
+        function bolusFormatter(v, axis) {
+            return v.toFixed(axis.tickDecimals) +"IU";
+        }
+        function bGFormatter(v, axis) {
+            return v.toFixed(axis.tickDecimals) + " mmol/L";
+        }
+
+        var previousPoint = null;
         $.getJSON("api/home/glucose" + window.location.search, function (model) {
             for (index in model) {
                 data.push([new Date(model[index].date), model[index].value]);
                 hours[model[index].date.substr(11, 2)].push(model[index].value);
             }
-            $.plot($("#ph1"), [data], { xaxis:{ mode:"time" } });
+            plots.push($.plot($("#ph1"), [data], flotOptions));
 
             for (var hourIndex in hourLabels) {
                 var sum = 0;
@@ -210,8 +272,61 @@
                     }
                 }
             }
-            $.plot($("#ph2"), [hourMean], { });
+            plots.push($.plot($("#ph2"), [{data:hourMean, label:"Mean bG during this hour"}], $.extend(true, flotOptions, {xaxes:[{mode:null}], yaxes:[{tickFormatter: bGFormatter}]})));
+
+
         });
+        $.getJSON("api/home/eventsByDay?skipEventsList=true&" + window.location.search.replace("?",""), function (model) {
+            var carbs=[];
+            var bolus=[];
+            for (index in model) {
+                if (model[index].carbs > 50 && model[index].bolus > 5) {
+                    carbs.push([new Date(model[index].date), model[index].carbs]);
+                    bolus.push([new Date(model[index].date), model[index].bolus]);
+                }
+            }
+            plots.push($.plot($("#ph3"),
+                   [ { data: carbs, label: "Daily carbs total" },
+                     { data: bolus, label: "Daily bolus total", yaxis: 2 }],
+                    $.extend(true, flotOptions, {
+                       xaxes: [ { mode: 'time' } ],
+                       yaxes: [ { tickFormatter: carbsFormatter },
+                                {tickFormatter: bolusFormatter, position: "right" } ],
+                       legend: { position: 'sw' }
+                   })));
+        });
+        setTimeout(function(){
+            for (var index in plots){
+                plots[index].getPlaceholder().bind("plothover", function (event, pos, item) {
+                    $("#x").text(pos.x.toFixed(2));
+                    $("#y").text(pos.y.toFixed(2));
+
+                    if (item) {
+                        if (previousPoint != item.dataIndex) {
+                            previousPoint = item.dataIndex;
+
+                            $("#tooltip").remove();
+                            var x = item.datapoint[0],
+                                y = item.datapoint[1];
+
+                            var content = "";
+                            console.log(x);
+                            if (item.series.xaxis.options.mode == "time") {
+                                content = item.series.label + " on " + ((new Date(x)).toUTCString().replace(" 00:00:00 GMT","").replace(":00 GMT",""))
+                                        + " = " + item.series.yaxis.tickFormatter(y,item.series.yaxis);
+                            } else {
+                                content = item.series.label + " of " + x + " = " + item.series.yaxis.tickFormatter(y,item.series.yaxis);
+                            }
+                            showTooltip(item.pageX, item.pageY, content);
+                        }
+                    } else {
+                        $("#tooltip").remove();
+                        previousPoint = null;
+                    }
+
+                });
+            }
+        }, 1000);
     });
 </script>
 </body>

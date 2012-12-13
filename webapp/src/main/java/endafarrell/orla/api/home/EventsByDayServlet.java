@@ -21,7 +21,17 @@ public class EventsByDayServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        boolean skipEventsList = false;
+        int weeks = -1;
+        try {
+            skipEventsList = Boolean.valueOf(req.getParameter("skipEventsList"));
+        } catch (Exception ignored) {
+        }
+        try {
+            weeks = Integer.valueOf(req.getParameter("w"));
+        } catch (Exception ignored) {
+        }
         res.setContentType("application/json");
-        orla.writeEventsByDayAsJson(res.getOutputStream());
+        orla.writeEventsByDayAsJson(res.getOutputStream(), skipEventsList, weeks);
     }
 }
