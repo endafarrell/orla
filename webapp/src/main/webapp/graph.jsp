@@ -216,6 +216,7 @@
         var data = [];
         var hours = {};
         var hourMean = [];
+        var hourCounts = [];
         hourLabels = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11",
             "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"];
         for (index in hourLabels) {
@@ -224,7 +225,7 @@
         }
         var flotOptions = {
             xaxis:{ mode:"time" },
-            grid:{ hoverable:true, clickable:true},
+            grid:{ hoverable:true, clickable:true, markings: weekendAreas },
             yaxis:{ labelWidth:70},
             points: { show: true },
             lines: { show: true }
@@ -250,14 +251,32 @@
         function bGFormatter(v, axis) {
             return v.toFixed(axis.tickDecimals) + " mmol/L";
         }
+        // helper for returning the weekends in a period
+        function weekendAreas(axes) {
+            var markings = [];
+            var d = new Date(axes.xaxis.min);
+            // go to the first Saturday
+            d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7))
+            d.setUTCSeconds(0);
+            d.setUTCMinutes(0);
+            d.setUTCHours(0);
+            var i = d.getTime();
+            do {
+                // when we don't set yaxis, the rectangle automatically
+                // extends to infinity upwards and downwards
+                markings.push({ xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 } });
+                i += 7 * 24 * 60 * 60 * 1000;
+            } while (i < axes.xaxis.max);
 
+            return markings;
+        }
         var previousPoint = null;
         $.getJSON("api/home/glucose" + window.location.search, function (model) {
             for (index in model) {
                 data.push([new Date(model[index].date), model[index].value]);
                 hours[model[index].date.substr(11, 2)].push(model[index].value);
             }
-            plots.push($.plot($("#ph1"), [data], flotOptions));
+            plots.push($.plot($("#ph1"), [data], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
 
             for (var hourIndex in hourLabels) {
                 var sum = 0;
@@ -266,13 +285,20 @@
                         sum += hours[hourLabels[hourIndex]][i]
                     }
                     if (hours[hourLabels[hourIndex]].length > 0) {
-                        hourMean.push([parseInt(hourIndex), sum / hours[hourLabels[hourIndex]].length])
+                        hourMean.push([parseInt(hourIndex)+0.5, sum / hours[hourLabels[hourIndex]].length]);
+                        hourCounts.push([parseInt(hourIndex), hours[hourLabels[hourIndex]].length]);
                     } else {
                         console.log("Skipping was good for " + hourIndex);
+                        hourCounts.push([parseInt(hourIndex), 0]);
                     }
                 }
             }
-            plots.push($.plot($("#ph2"), [{data:hourMean, label:"Mean bG during this hour"}], $.extend(true, flotOptions, {xaxes:[{mode:null}], yaxes:[{tickFormatter: bGFormatter}]})));
+            plots.push($.plot($("#ph2"),
+                             [
+                                 {data:hourMean, label:"Mean bG during this hour"},
+                                 {data:hourCounts, label:"Number of tests during this hour", bars: { show: true }, lines: { show: false}, points: {show: false}, yaxis:2}
+                             ],
+                             $.extend(true, {}, flotOptions, {xaxes:[{mode:null, tickDecimals:0}], yaxes:[{tickFormatter: bGFormatter},{tickFormatter: null, position: "right"}]})));
 
 
         });
@@ -288,11 +314,11 @@
             plots.push($.plot($("#ph3"),
                    [ { data: carbs, label: "Daily carbs total" },
                      { data: bolus, label: "Daily bolus total", yaxis: 2 }],
-                    $.extend(true, flotOptions, {
+                    $.extend(true, {}, flotOptions, {
                        xaxes: [ { mode: 'time' } ],
                        yaxes: [ { tickFormatter: carbsFormatter },
                                 {tickFormatter: bolusFormatter, position: "right" } ],
-                       legend: { position: 'sw' }
+                       legend: { position: 'se' }
                    })));
         });
         setTimeout(function(){

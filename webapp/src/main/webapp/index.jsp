@@ -111,7 +111,7 @@
         }
 
         td.day {
-            width: 8em;
+            width: 14em;
         }
 
         td.Mon, td.Tue, td.Wed, td.Thu, td.Fri {
@@ -160,7 +160,8 @@
         }
 
         .time {
-            color: silver
+            color: silver;
+            font-size: 80%;
         }
 
     </style>
@@ -171,12 +172,13 @@
             {{each days}}
             <tr class="day ${day}" id="events_${date}">
                 <td class="day ${day}">
-                    <p>${day}</p>
-                    <p>${date}</p>
-                    <p class="time">carbs: ${carbs}g</p>
-                    <p class="time">bolus: ${bolus}IU</p>
-                    <p class="time">IU/10g: ${IU_10g}</p>
-                    <p class="time">total: ${<%=Event.BOLUS_PLUS_BASAL%>}</p>
+                    <table>
+                        <tr><td colspan="2"><strong>${day}</strong> ${date}</td></tr>
+                        <tr><td>carbs:</td><td>${carbs}</td></tr>
+                        <tr><td>basal+bolus:</td><td>${<%=Event.BOLUS_PLUS_BASAL%>} IU</td></tr>
+                        <tr><td>bolus:</td><td>${bolus} IU</td></tr>
+                        <tr><td>IU/10g:</td><td>${IU_10g}</td></tr>
+                    </table>
                 </td>
                 <td class="dayDetails">
                     {{each events}}
@@ -185,7 +187,7 @@
                         <span class="time">${date.split(" ")[1]}</span><span class="${unit}">${text}</span>
                         {{else}}
                         {{if unit == "mmol_L"}}
-                        <span class="time">${date.split(" ")[1]}</span><span class="${unit}">${value}</span><span class="unit">mmol/L</span>
+                        <span style="border-right: 8px ${bG_color} solid; padding-right: 4px"><span class="time">${date.split(" ")[1]}</span><span class="${unit}">${value}</span><span class="unit"> mmol/L</span></span>
                         {{else}}
                         <span class="time">${date.split(" ")[1]}</span>${value}<span class="unit">${unit}</span> ${text}</span>
                         {{/if}}
@@ -221,9 +223,12 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $("#eventsByDayListTmpl").template("thisEventsListTemplate");
-        $.getJSON("api/home/eventsByDay", function (model) {
+        $.getJSON("api/home/eventsByDay?w=8", function (model) {
             var data = {days:model};
-            $.tmpl("thisEventsListTemplate", data).appendTo("#events");
+            console.log("Model received from eventsByDay: ", model);
+            var newMarkup = $.tmpl("thisEventsListTemplate", data);
+            console.log("newMarkup: ", newMarkup);
+            newMarkup.appendTo("#events");
             window.scrollTo(0, document.body.scrollHeight);
         });
     });

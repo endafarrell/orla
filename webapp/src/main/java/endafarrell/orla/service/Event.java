@@ -20,7 +20,7 @@ public class Event implements Comparable<Event> {
         SmartPix,
         Twitter,
         Endomondo,
-        Orla;
+        Orla,
     }
 
     public enum Unit {
@@ -107,29 +107,59 @@ public class Event implements Comparable<Event> {
 
     @Override
     public String toString() {
-        return toJson().toString();
+        return "Event{" +
+                "date=" + date +
+                ", source=" + source +
+                ", text='" + text + '\'' +
+                ", value=" + value +
+                ", unit=" + unit +
+                '}';
     }
 
     public ObjectNode toJson() {
         ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-        objectNode.put("date", dateTimeFormat.format(date));
-        objectNode.put("day", dayFormat.format(date));
-        objectNode.put("time_pct", (int) ((date.getHours() * 60 + date.getMinutes()) / 14.4D));
-        objectNode.put("source", source.toString());
-        objectNode.put("text", StringEscapeUtils.escapeHtml(text));
-        if (value == null) {
-            objectNode.putNull("value");
-        } else if (value instanceof Integer) {
-            objectNode.put("value", value.intValue());
-        } else {
-            objectNode.put("value", value.doubleValue());
+        try {
+            objectNode.put("date", dateTimeFormat.format(date));
+            objectNode.put("day", dayFormat.format(date));
+            objectNode.put("time_pct", (int) ((date.getHours() * 60 + date.getMinutes()) / 14.4D));
+            objectNode.put("source", source.toString());
+            objectNode.put("text", StringEscapeUtils.escapeHtml(text));
+            if (value == null) {
+                objectNode.putNull("value");
+            } else if (value instanceof Integer) {
+                objectNode.put("value", value.intValue());
+            } else {
+                objectNode.put("value", value.doubleValue());
+            }
+            objectNode.put("unit", unit.toString());
+            if (unit == Unit.mmol_L) {
+                double mmol_L = value.doubleValue();
+                String color = "black";
+                if (16.5 > mmol_L) {
+                    color = "grey";
+                }
+                if (9.0 > mmol_L) {
+                    color = "green";
+                }
+                if (5.0 > mmol_L) {
+                    color = "orange";
+                }
+                if (4.0 > mmol_L) {
+                    color = "red";
+                }
+                if (0 > mmol_L) {
+                    color = "blue";
+                }
+                objectNode.put("bG_color", color);
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println("This causes an ArrayIndexOutOfBoundsException: " + toString());
+            e.printStackTrace();
         }
-        objectNode.put("unit", unit.toString());
         return objectNode;
     }
 
     public boolean sameDayAs(Event previous) {
-        if (previous == null) return true;
-        return dayFormat.format(date).equals(dayFormat.format(previous.date));
+        return previous == null || dayFormat.format(date).equals(dayFormat.format(previous.date));
     }
 }

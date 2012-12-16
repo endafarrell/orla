@@ -6,17 +6,11 @@ import endafarrell.orla.service.data.parser.EndomondoHtmlHandler;
 import endafarrell.orla.service.data.parser.SmartPixSaxHandler;
 import endafarrell.orla.service.data.parser.TwitterMessageHandler;
 import endafarrell.orla.service.data.persistence.Database;
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.math.stat.descriptive.rank.Percentile;
 import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
-import org.joda.time.DateTime;
-import org.joda.time.Months;
-import org.joda.time.ReadablePeriod;
 import org.joda.time.Weeks;
 import org.xml.sax.SAXException;
 
@@ -31,7 +25,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 /**
- * Skeleton service
+ * Simple diabetes management service
  *
  * @author Enda Farrell
  * @since 20120-10-23
@@ -42,7 +36,7 @@ public class Orla {
 
     final OrlaMonitor monitor;
     final SAXParser saxParser;
-    final HashSet<Event> events;
+    HashSet<Event> events;
     final JsonFactory jsonFactory;
     final ObjectMapper objectMapper;
     final Database database;
@@ -102,6 +96,7 @@ public class Orla {
             saxParser.parse(stream, smartPixSaxHandler);
             events.addAll(smartPixSaxHandler.getEvents());
             database.save(events);
+            events = database.load();
             return events.size();
         } catch (SAXException e) {
             throw new RuntimeException(e);
@@ -114,6 +109,7 @@ public class Orla {
         EndomondoHtmlHandler endomondoHtmlHandler = new EndomondoHtmlHandler();
         events.addAll(endomondoHtmlHandler.getNewEvents(events));
         database.save(events);
+        events = database.load();
         return events.size();
     }
 
@@ -121,13 +117,23 @@ public class Orla {
         TwitterMessageHandler twitterMessageHandler = new TwitterMessageHandler();
         events.addAll(twitterMessageHandler.getNewMessages(events));
         database.save(events);
+        events = database.load();
         return events.size();
     }
 
     public void writeEventsAsJson(final OutputStream outputStream) throws IOException {
-        ArrayList<Event> eventsList = new ArrayList<Event>(events);
-        Collections.sort(eventsList);
-        //Collections.reverse(eventsList);
+        writeEventsAsJson(outputStream, -1);
+    }
+
+    /**
+     * Writes the events as a JSON array, possibly time limited.
+     * @param outputStream Where to write to
+     * @param weeks The number of weeks, ending with the latest entries, of data to write. Values greater than zero
+     *              will truncate
+     * @throws IOException
+     */
+    public void writeEventsAsJson(final OutputStream outputStream, int weeks) throws IOException {
+        ArrayList<Event> eventsList = getEventsList(weeks, false);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for (Event event : eventsList) {
             arrayNode.add(event.toJson());
@@ -135,17 +141,26 @@ public class Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    public void writeEventsByDayAsJson(ServletOutputStream outputStream, boolean skipEventsList, int weeks) throws IOException {
-        ArrayList<Event> eventsList = new ArrayList<Event>(events);
-        if (weeks > 0) {
-            eventsList = last(eventsList, Weeks.weeks(weeks));
-        } else {
-            Collections.sort(eventsList);
+    public void writeAscentDecentByDayAsJson(OutputStream outputStream, int weeks) throws IOException {
+        ArrayList<Event> eventsList = getEventsList(weeks, true);
+        eventsList = Filter.only(eventsList, Event.Unit.mmol_L);
+        Event previous = null;
+        for (Event event : eventsList) {
+            if (!event.sameDayAs(previous)) {
+                System.err.println("Still haven't figured out how to aportion across midnight :-(");
+            } else {
+
+            }
         }
-        boolean addEvents = !skipEventsList;
+    }
+
+    public void writeEventsByDayAsJson(OutputStream outputStream, boolean omitEventsList, int weeks) throws IOException {
+        ArrayList<Event> eventsList = getEventsList(weeks, false);
+        boolean addEvents = !omitEventsList;
 
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
+        arrayNode.add(dayNode);
         ArrayNode dayEvents = JsonNodeFactory.instance.arrayNode();
         if (addEvents) dayNode.put("events", dayEvents);
         Integer carbs = 0;
@@ -156,7 +171,7 @@ public class Orla {
         for (Event event : eventsList) {
             if (event.sameDayAs(previous)) {
                 if (Event.BOLUS_PLUS_BASAL.equals(event.text)) {
-                    dayNode.put(Event.BOLUS_PLUS_BASAL, round(event.value.doubleValue(),2));
+                    dayNode.put(Event.BOLUS_PLUS_BASAL, Convert.round(event.value.doubleValue(), 2));
                 } else {
                     if (addEvents) dayEvents.add(event.toJson());
                 }
@@ -169,37 +184,47 @@ public class Orla {
             } else {
                 // Not the same day, therefore decorate and add the dayNode to the arrayNode
                 dayNode.put("carbs", carbs);
-                dayNode.put("bolus", round(bolus, 1));
-                dayNode.put("IU_10g", round(bolus * 10 / carbs,1));
-                arrayNode.add(dayNode);
+                dayNode.put("bolus", Convert.round(bolus, 1));
+                dayNode.put("IU_10g", Convert.round(bolus * 10 / carbs, 1));
+
                 // And reset
                 dayNode = JsonNodeFactory.instance.objectNode();
+                arrayNode.add(dayNode);
                 dayEvents = JsonNodeFactory.instance.arrayNode();
                 if (addEvents) dayNode.put("events", dayEvents);
                 dayNode.put("day", Event.dayFormat.format(event.date));
                 dayNode.put("date", Event.dateFormat.format(event.date));
-                if (addEvents) dayEvents.add(event.toJson());
+                if (Event.BOLUS_PLUS_BASAL.equals(event.text)){
+                    dayNode.put(Event.BOLUS_PLUS_BASAL, Convert.round(event.value.doubleValue(), 2));
+                } else {
+                    if (addEvents) dayEvents.add(event.toJson());
+                }
                 carbs = 0;
                 bolus = 0d;
             }
             previous = event;
         }
+
+
+        System.out.println((new Date()).toString() + ": " + eventsList.get(eventsList.size()-1).toString());
+        System.out.println((new Date()).toString() + "| " + arrayNode.get(arrayNode.size()-1).toString());
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    private double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-
-        long factor = (long) Math.pow(10, places);
-        value = value * factor;
-        long tmp = Math.round(value);
-        return (double) tmp / factor;
+    private ArrayList<Event> getEventsList(int weeks, boolean includePreceding) {
+        ArrayList<Event> eventsList = new ArrayList<Event>(events);
+        if (weeks > 0) {
+            eventsList = Filter.last(eventsList, Weeks.weeks(weeks), includePreceding);
+        } else {
+            Collections.sort(eventsList);
+        }
+        return eventsList;
     }
 
     public void writeGlucoseReadings(ServletOutputStream outputStream, int weeks, int lower, int higher) throws IOException {
-        ArrayList<Event> eventsList = new ArrayList<Event>(events);
-        eventsList = last(eventsList, Weeks.weeks(weeks));
-        eventsList = percentiles(eventsList, Event.Unit.mmol_L, lower, higher);
+        ArrayList<Event> eventsList = getEventsList(weeks, false);
+        eventsList = Filter.only(eventsList, Event.Unit.mmol_L);
+        eventsList = Filter.percentiles(eventsList, lower, higher);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for (Event event : eventsList) {
             arrayNode.add(event.toJson());
@@ -207,60 +232,4 @@ public class Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    public static ArrayList<Event> last(ArrayList<Event> events, ReadablePeriod period) {
-        Collections.sort(events);
-        ArrayList<Event> last = new ArrayList<Event>(events.size());
-        DateTime end = new DateTime(events.get(events.size() - 1).date);
-        DateTime start = end.minus(period);
-        Date startDate = start.toDate();
-        for (Event e : events) {
-            if (e.date.after(startDate)) {
-                last.add(e);
-            }
-        }
-        last.trimToSize();
-        return last;
-    }
-
-    public static ArrayList<Event> percentiles(ArrayList<Event> events, Event.Unit unit, int lower, int higher) {
-        if (unit != Event.Unit.mmol_L) {
-            throw new NotImplementedException("Only Event.Unit.mmol_L is supported.");
-        }
-
-        // Get the raw values
-        ArrayList<Double> values = new ArrayList<Double>(events.size());
-        for (Event e : events) {
-            if (e.unit == unit) {
-                values.add(e.value.doubleValue());
-            }
-        }
-        values.trimToSize();
-        // Get the lower-th percentile
-        Percentile percentile = new Percentile(lower);
-        percentile.setData(todoubles(values));
-        double lowerPercentile = percentile.evaluate();
-        // Get the higher-th percentile
-        percentile = new Percentile(higher);
-        percentile.setData(todoubles(values));
-        double higherPercentile = percentile.evaluate();
-
-        // Now return the glucose readings between these percentiles
-        ArrayList<Event> percentiles = new ArrayList<Event>(events.size());
-        for (Event e : events) {
-            if (e.unit == unit && e.value.doubleValue() > lowerPercentile && e.value.doubleValue() < higherPercentile) {
-                percentiles.add(e);
-            }
-        }
-        percentiles.trimToSize();
-        return percentiles;
-    }
-
-    public static double[] todoubles(List<Double> source) {
-        double[] doubles = new double[source.size()];
-        int index = 0;
-        for (Double d : source) {
-            doubles[index++] = d;
-        }
-        return doubles;
-    }
 }
