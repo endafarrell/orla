@@ -1,5 +1,6 @@
 package endafarrell.orla.service;
 
+import endafarrell.orla.service.data.Event;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
 import org.joda.time.DateTime;
 import org.joda.time.ReadablePeriod;

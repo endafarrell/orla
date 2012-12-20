@@ -1,6 +1,6 @@
 package endafarrell.orla.api.home;
 
-import endafarrell.orla.service.Event;
+import endafarrell.orla.service.data.Event;
 import endafarrell.orla.service.Orla;
 
 import javax.servlet.ServletException;

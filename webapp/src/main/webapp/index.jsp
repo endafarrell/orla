@@ -1,4 +1,4 @@
-<%@ page import="endafarrell.orla.service.Event" %><!DOCTYPE HTML>
+<%@ page import="endafarrell.orla.service.data.Event" %><!DOCTYPE HTML>
 <html>
 <head>
     <title>Orla - diabetes diary</title>
@@ -187,7 +187,7 @@
                         <span class="time">${date.split(" ")[1]}</span><span class="${unit}">${text}</span>
                         {{else}}
                         {{if unit == "mmol_L"}}
-                        <span style="border-right: 8px ${bG_color} solid; padding-right: 4px"><span class="time">${date.split(" ")[1]}</span><span class="${unit}">${value}</span><span class="unit"> mmol/L</span></span>
+                        <span style="border-right: 8px ${bG_color} solid; padding-right: 4px;"><span class="time">${date.split(" ")[1]}</span><span class="${unit}">${value}</span><span class="unit"> mmol/L</span></span>
                         {{else}}
                         <span class="time">${date.split(" ")[1]}</span>${value}<span class="unit">${unit}</span> ${text}</span>
                         {{/if}}
@@ -211,7 +211,7 @@
         <li><a href="api/home/twitter">check messages</a></li>
         <li>&crarr;</li>
         <li><a href="api/home/events">see events</a></li>
-        <li><a href="api/home/eventsByDay">see events by day</a></li>
+        <li><a href="api/home/events/byDay">see events by day</a></li>
         <li><a href="api/home/glucose?m=3&l=25&h=75">glucose readings</a></li>
         <li><a href="api/sys/config">see config</a></li>
     </ul>
@@ -223,7 +223,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $("#eventsByDayListTmpl").template("thisEventsListTemplate");
-        $.getJSON("api/home/eventsByDay?w=8", function (model) {
+        $.getJSON("api/home/events/byDay?w=8", function (model) {
             var data = {days:model};
             console.log("Model received from eventsByDay: ", model);
             var newMarkup = $.tmpl("thisEventsListTemplate", data);

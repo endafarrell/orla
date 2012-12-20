@@ -1,4 +1,4 @@
-package endafarrell.orla.service;
+package endafarrell.orla.service.data;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.codehaus.jackson.node.JsonNodeFactory;
@@ -160,6 +160,6 @@ public class Event implements Comparable<Event> {
     }
 
     public boolean sameDayAs(Event previous) {
-        return previous == null || dayFormat.format(date).equals(dayFormat.format(previous.date));
+        return previous != null && dayFormat.format(date).equals(dayFormat.format(previous.date));
     }
 }

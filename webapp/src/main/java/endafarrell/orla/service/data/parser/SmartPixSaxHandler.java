@@ -1,6 +1,6 @@
 package endafarrell.orla.service.data.parser;
 
-import endafarrell.orla.service.Event;
+import endafarrell.orla.service.data.Event;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;

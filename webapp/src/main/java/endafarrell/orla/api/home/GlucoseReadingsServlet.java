@@ -9,8 +9,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/api/home/eventsByDay"})
-public class EventsByDayServlet extends HttpServlet {
+@WebServlet(urlPatterns = {"/api/home/glucose"})
+public class GlucoseReadingsServlet extends HttpServlet {
 
     Orla orla;
 
@@ -21,17 +21,13 @@ public class EventsByDayServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        boolean skipEventsList = false;
-        int weeks = -1;
-        try {
-            skipEventsList = Boolean.valueOf(req.getParameter("skipEventsList"));
-        } catch (Exception ignored) {
-        }
+        int weeks = 4;
         try {
             weeks = Integer.valueOf(req.getParameter("w"));
         } catch (Exception ignored) {
         }
+
         res.setContentType("application/json");
-        orla.writeEventsByDayAsJson(res.getOutputStream(), skipEventsList, weeks);
+        orla.writeGlucoseReadings(res.getOutputStream(), weeks);
     }
 }

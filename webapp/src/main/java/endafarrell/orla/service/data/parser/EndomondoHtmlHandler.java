@@ -1,6 +1,6 @@
 package endafarrell.orla.service.data.parser;
 
-import endafarrell.orla.service.Event;
+import endafarrell.orla.service.data.Event;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,11 +14,12 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 public class EndomondoHtmlHandler {
     public static DateFormat DATEFORMAT = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
 
-    public ArrayList<Event> getNewEvents(HashSet<Event> oldEvents) {
+    public ArrayList<Event> getNewEvents(Set<Event> oldEvents) {
         ArrayList<Event> events = new ArrayList<Event>(100);
         try {
             URL url = new URL("http://www.endomondo.com/embed/user/workouts?id=6422023&measure=0&width=680&height=4000");

@@ -1,4 +1,4 @@
-package endafarrell.orla.api.home;
+package endafarrell.orla.api.home.glucose;
 
 import endafarrell.orla.service.Orla;
 
@@ -9,8 +9,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/api/home/glucose"})
-public class RangedGlucoseReadingsServlet extends HttpServlet {
+@WebServlet(urlPatterns = {"/api/home/glucose/percentiled"})
+public class PercentiledGlucoseReadingsServlet extends HttpServlet {
 
     Orla orla;
 

@@ -1,6 +1,7 @@
 package endafarrell.orla.service;
 
 
+import endafarrell.orla.service.data.Event;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

@@ -187,6 +187,14 @@
     &raquo;</nav>
 <section>
     <div class="graph">
+        <h3>Glucose readings</h3>
+        <div id="ph0" style="width: 90%; height: 300px"></div>
+    </div>
+    <div class="graph">
+        <h3>Ascent/descent</h3>
+        <div id="pha" style="width: 90%; height: 300px"></div>
+    </div>
+    <div class="graph">
         <h3>Percentiled values</h3>
 
         <div id="ph1" style="width:90%; height:300px;"></div>
@@ -220,12 +228,11 @@
         hourLabels = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11",
             "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"];
         for (index in hourLabels) {
-            console.log("index in hourLabels", index);
             hours[hourLabels[index]] = [];
         }
         var flotOptions = {
             xaxis:{ mode:"time" },
-            grid:{ hoverable:true, clickable:true, markings: weekendAreas },
+            grid:{ hoverable:true, clickable:true, markings: nightAndWeekendAreas },
             yaxis:{ labelWidth:70},
             points: { show: true },
             lines: { show: true }
@@ -256,7 +263,7 @@
             var markings = [];
             var d = new Date(axes.xaxis.min);
             // go to the first Saturday
-            d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7))
+            d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7));
             d.setUTCSeconds(0);
             d.setUTCMinutes(0);
             d.setUTCHours(0);
@@ -264,21 +271,90 @@
             do {
                 // when we don't set yaxis, the rectangle automatically
                 // extends to infinity upwards and downwards
-                markings.push({ xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 } });
+                markings.push({ xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 }, color: "#32cd32" });
                 i += 7 * 24 * 60 * 60 * 1000;
             } while (i < axes.xaxis.max);
 
             return markings;
         }
+
+        // helper for returning the nights in a period
+        function nightAreas(axes) {
+            var markings = [];
+            var d = new Date(axes.xaxis.min);
+            // go to the first 11pm
+            d.setUTCSeconds(0);
+            d.setUTCMinutes(0);
+            d.setUTCHours(23);
+            var i = d.getTime();
+            do {
+                markings.push({ xaxis: { from: i, to: i + 8 * 60 * 60 * 1000}, color: "#dddddd"});
+                i += 24 * 60 * 60 * 1000;
+            } while (i < axes.xaxis.max);
+
+            return markings;
+        }
+
+        function nightAndWeekendAreas(axes) {
+            var markings = [];
+
+            // Nights
+            var d = new Date(axes.xaxis.min);
+            // go to the first 11pm
+            d.setUTCSeconds(0);
+            d.setUTCMinutes(0);
+            d.setUTCHours(23);
+            var i = d.getTime();
+            do {
+                markings.push({ xaxis: { from: i, to: i + 8 * 60 * 60 * 1000}, yaxis: { from: 0, to: 1.75 }, color: "#dddddd"});
+                i += 24 * 60 * 60 * 1000;
+            } while (i < axes.xaxis.max);
+
+            // Weekends
+            d = new Date(axes.xaxis.min);
+            // go to the first Saturday
+            d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7));
+            d.setUTCSeconds(0);
+            d.setUTCMinutes(0);
+            d.setUTCHours(0);
+            i = d.getTime();
+            do {
+                // when we don't set yaxis, the rectangle automatically
+                // extends to infinity upwards and downwards
+                markings.push({ xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 }, yaxis: { from: 0, to: 0.75 }, color: "#32cd32" });
+                i += 7 * 24 * 60 * 60 * 1000;
+            } while (i < axes.xaxis.max);
+
+
+
+            return markings;
+
+        }
         var previousPoint = null;
         $.getJSON("api/home/glucose" + window.location.search, function (model) {
-            for (index in model) {
+            var bGs = [];
+            for (var index = 0; index < model.length; index++) {
+                bGs.push([new Date(model[index].date), model[index].value]);
+            }
+            plots.push($.plot($("#ph0"), [bGs], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
+        });
+
+        $.getJSON("api/home/ascentDescent" + window.location.search, function (model) {
+            var ads = [];
+            for (var index = 0; index < model.length; index++) {
+                ads.push([new Date(model[index].date), model[index].ascDesc]);
+            }
+            plots.push($.plot($("#pha"), [ads], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
+        });
+
+        $.getJSON("api/home/glucose/percentiled" + window.location.search, function (model) {
+            for (var index =0; index < model.length; index++) {
                 data.push([new Date(model[index].date), model[index].value]);
                 hours[model[index].date.substr(11, 2)].push(model[index].value);
             }
             plots.push($.plot($("#ph1"), [data], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
 
-            for (var hourIndex in hourLabels) {
+            for (var hourIndex =0; hourIndex < hourLabels.length; hourIndex++) {
                 var sum = 0;
                 if (hours[hourLabels[hourIndex]]) {
                     for (var i = 0, l = hours[hourLabels[hourIndex]].length; i < l; i++) {
@@ -288,7 +364,6 @@
                         hourMean.push([parseInt(hourIndex)+0.5, sum / hours[hourLabels[hourIndex]].length]);
                         hourCounts.push([parseInt(hourIndex), hours[hourLabels[hourIndex]].length]);
                     } else {
-                        console.log("Skipping was good for " + hourIndex);
                         hourCounts.push([parseInt(hourIndex), 0]);
                     }
                 }
@@ -302,10 +377,10 @@
 
 
         });
-        $.getJSON("api/home/eventsByDay?skipEventsList=true&" + window.location.search.replace("?",""), function (model) {
+        $.getJSON("api/home/events/byDay?skipEventsList=true&" + window.location.search.replace("?",""), function (model) {
             var carbs=[];
             var bolus=[];
-            for (index in model) {
+            for (var index = 0; index < model.length; index++) {
                 if (model[index].carbs > 50 && model[index].bolus > 5) {
                     carbs.push([new Date(model[index].date), model[index].carbs]);
                     bolus.push([new Date(model[index].date), model[index].bolus]);
@@ -336,7 +411,6 @@
                                 y = item.datapoint[1];
 
                             var content = "";
-                            console.log(x);
                             if (item.series.xaxis.options.mode == "time") {
                                 content = item.series.label + " on " + ((new Date(x)).toUTCString().replace(" 00:00:00 GMT","").replace(":00 GMT",""))
                                         + " = " + item.series.yaxis.tickFormatter(y,item.series.yaxis);
