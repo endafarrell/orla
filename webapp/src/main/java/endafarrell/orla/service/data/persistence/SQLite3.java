@@ -1,40 +1,37 @@
 package endafarrell.orla.service.data.persistence;
 
-import endafarrell.orla.service.data.Event;
+import endafarrell.orla.service.config.OrlaConfig;
+import endafarrell.orla.service.data.BaseEvent;
+import endafarrell.orla.service.data.Source;
+import endafarrell.orla.service.data.Unit;
+import org.joda.time.DateTime;
 
 import java.sql.*;
-import java.text.ParseException;
 import java.util.*;
-import java.util.Date;
 
 public class SQLite3 extends Database {
-
-    public final String DATA_DIR;
+    static OrlaConfig config = OrlaConfig.getInstance();
     private final Connection connection;
 
     private static class SingletonHolder {
-        public static SQLite3 INSTANCE(String dataDir) {
-            return new SQLite3(dataDir);
-        }
+        public static SQLite3 INSTANCE= new SQLite3();
     }
 
-    public static SQLite3 getInstance(String dataDir) {
-        return SingletonHolder.INSTANCE(dataDir);
+    public static SQLite3 getInstance() {
+        return SingletonHolder.INSTANCE;
     }
 
-    private SQLite3(final String datadir) {
-        super();
-        this.DATA_DIR = datadir;
+    private SQLite3() {
+        super(config.getDatabaseConnectionString());
         StringBuilder sql = new StringBuilder();
         try {
             Class.forName("org.sqlite.JDBC");
-            this.connection = DriverManager.getConnection("jdbc:sqlite:" + datadir + "/sqlite3/orla.db");
+            this.connection = DriverManager.getConnection(this.connectionString);
             sql = new StringBuilder();
             sql.append("CREATE TABLE IF NOT EXISTS events (")
                     .append("utc TEXT, ")
                     .append("source TEXT, ")
                     .append("text TEXT, ")
-                    .append("value REAL, ")
                     .append("unit TEXT, ")
                     .append("_lastModified TEXT DEFAULT (datetime('now')), ")
                     .append("PRIMARY KEY (utc, source, unit));");
@@ -62,13 +59,13 @@ public class SQLite3 extends Database {
      *               may already be in the database.
      */
     @Override
-    public void save(Collection<Event> events) {
+    public void save(Collection<BaseEvent> events) {
         StringBuilder sql = new StringBuilder();
         try {
             Statement stmt = this.connection.createStatement();
             sql.append("BEGIN TRANSACTION; ");
             stmt.executeUpdate(sql.toString());
-            for (Event event : events) {
+            for (BaseEvent event : events) {
                 // Mostly for error logging
                 sql = toSql(event);
                 stmt.executeUpdate(sql.toString());
@@ -86,11 +83,11 @@ public class SQLite3 extends Database {
     }
 
 
-    StringBuilder toSql(Event event) {
+    StringBuilder toSql(BaseEvent event) {
         return new StringBuilder("INSERT OR REPLACE INTO events (")
                 .append("utc, source, text, value, unit")
                 .append(") VALUES (\"")
-                .append(dateFormat.format(event.date))
+                .append(dateFormat.print(event.startTime))
                 .append("\", \"").append(event.source.toString())
                 .append("\", \"").append(event.text)
                 .append("\", ").append(event.value)
@@ -98,28 +95,25 @@ public class SQLite3 extends Database {
                 .append("\");");
     }
 
-    public Set<Event> load() {
+    public Set<BaseEvent> load() {
         StringBuilder sql = new StringBuilder();
         try {
             Statement stmt = this.connection.createStatement();
             sql.append("SELECT utc, source, text, value, unit from events;");
             ResultSet resultSet = stmt.executeQuery(sql.toString());
-            HashSet<Event> events = new HashSet<Event>(5000);
+            HashSet<BaseEvent> events = new HashSet<BaseEvent>(5000);
             while (resultSet.next()) {
-                Date date = new Date();
-                try {
-                    date = dateFormat.parse(resultSet.getString("utc"));
-                } catch (ParseException ignored) {
-                }
+                DateTime date = DateTime.now();
+                date = dateFormat.parseDateTime(resultSet.getString("utc"));
                 double dValue = resultSet.getDouble("value");
                 int iValue = resultSet.getInt("value");
                 Number value = ((double) iValue == dValue) ? new Integer(iValue) : new Double(dValue);
-                Event event = new Event(
+                BaseEvent event = new BaseEvent(
                         date,
-                        Event.Source.valueOf(resultSet.getString("source")),
+                        Source.valueOf(resultSet.getString("source")),
                         resultSet.getString("text"),
                         value,
-                        Event.Unit.valueOf(resultSet.getString("unit"))
+                        Unit.valueOf(resultSet.getString("unit"))
                 );
                 events.add(event);
             }
@@ -128,14 +122,4 @@ public class SQLite3 extends Database {
             throw new IllegalStateException(sql.toString(), e);
         }
     }
-
-    @Override
-    public String getURL() {
-        try {
-        return this.connection.getMetaData().getURL();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 }

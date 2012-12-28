@@ -1,15 +1,17 @@
 package endafarrell.orla.service.data.parser;
 
-import endafarrell.orla.service.data.Event;
+import endafarrell.orla.service.data.BaseEvent;
+import endafarrell.orla.service.data.Source;
+import endafarrell.orla.service.data.Unit;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * Oddly, only the "BG" element is cared about. It has no text nor any children, only attributes. The attributes
@@ -33,25 +35,24 @@ import java.util.Date;
  * <
  */
 public class SmartPixSaxHandler extends DefaultHandler {
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-ddHH:mm");
-    private ArrayList<Event> events = new ArrayList<Event>(1500);
+    private static final DateTimeFormatter dateFormat = DateTimeFormat.forPattern("yyyy-MM-ddHH:mm");
+    private ArrayList<BaseEvent> events = new ArrayList<BaseEvent>(1500);
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-        System.out.println(qName);
-        try {
+
             if ("BG".equals(qName)) {
                 String dt = attributes.getValue("Dt");
                 String tm = attributes.getValue("Tm");
-                Date date = dateFormat.parse(dt + tm);
+                DateTime date = dateFormat.parseDateTime(dt + tm);
                 String val = attributes.getValue("Val");
 
                 if (!"---".equals(val)) {
-                    events.add(new Event(date, Event.Source.SmartPix, "bG", new Double(val), Event.Unit.mmol_L));
+                    events.add(new BaseEvent(date, Source.SmartPix, "bG", new Double(val), Unit.mmol_L));
                 }
                 String carb = attributes.getValue("Carb");
                 if (carb != null) {
-                    events.add(new Event(date, Event.Source.SmartPix, "carb", new Integer(carb), Event.Unit.g));
+                    events.add(new BaseEvent(date, Source.SmartPix, "carb", new Integer(carb), Unit.g));
                 }
             }
             // <BOLUS Dt="2012-12-08" Tm="13:32" type="Std" amount="5.30" cmd="1" />
@@ -61,26 +62,22 @@ public class SmartPixSaxHandler extends DefaultHandler {
                 if ("Std".equals(type)) {
                     String dt = attributes.getValue("Dt");
                     String tm = attributes.getValue("Tm");
-                    Date date = dateFormat.parse(dt + tm);
+                    DateTime date = dateFormat.parseDateTime(dt + tm);
                     String amount = attributes.getValue("amount");
-                    events.add(new Event(date, Event.Source.SmartPix, Event.BOLUS, new Double(amount), Event.Unit.IU));
+                    events.add(new BaseEvent(date, Source.SmartPix, BaseEvent.BOLUS, new Double(amount), Unit.IU));
                 }
 
                 if ("Bolus+Basal Total".equals(attributes.getValue("remark"))) {
                     String dt = attributes.getValue("Dt");
-                    Date date = dateFormat.parse(dt + "00:00");
+                    DateTime date = dateFormat.parseDateTime(dt + "00:00");
                     String amount = attributes.getValue("amount");
-                    events.add(new Event(date, Event.Source.SmartPix, Event.BOLUS_PLUS_BASAL, new Double(amount), Event.Unit.IU));
+                    events.add(new BaseEvent(date, Source.SmartPix, BaseEvent.BOLUS_PLUS_BASAL, new Double(amount), Unit.IU));
                 } else {
                     System.err.println(attributes.getValue("remark"));
                 }
             }
-
-        } catch (ParseException e) {
-            e.printStackTrace();
-            throw new SAXException(e);
         }
-    }
+
 
     @Override
     public void warning(SAXParseException e) throws SAXException {
@@ -92,7 +89,7 @@ public class SmartPixSaxHandler extends DefaultHandler {
         e.printStackTrace();
     }
 
-    public ArrayList<Event> getEvents() {
+    public ArrayList<BaseEvent> getEvents() {
         return events;
     }
 }

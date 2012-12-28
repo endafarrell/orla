@@ -2,12 +2,14 @@ package endafarrell.orla.service;
 
 import com.ctc.wstx.sax.WstxSAXParserFactory;
 import endafarrell.orla.monitoring.OrlaMonitor;
-import endafarrell.orla.service.data.Event;
+import endafarrell.orla.service.config.OrlaConfig;
+import endafarrell.orla.service.data.BaseEvent;
+import endafarrell.orla.service.data.Unit;
 import endafarrell.orla.service.data.parser.EndomondoHtmlHandler;
 import endafarrell.orla.service.data.parser.SmartPixSaxHandler;
 import endafarrell.orla.service.data.parser.TwitterMessageHandler;
 import endafarrell.orla.service.data.persistence.Database;
-import endafarrell.orla.service.data.persistence.DatabaseFactory;
+import endafarrell.orla.service.data.persistence.SQLite3;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -32,35 +34,31 @@ import java.util.*;
  * @since 20120-10-23
  */
 public class Orla {
+    private static Orla INSTANCE;
+    final static OrlaConfig config = OrlaConfig.getInstance();
+
     final static SAXParserFactory saxParserFactory = WstxSAXParserFactory.newInstance();
-    public static final String DATA_DIR = "/var/data/endafarrell/orla";
 
     final OrlaMonitor monitor;
     final SAXParser saxParser;
-    Set<Event> events;
+    Set<BaseEvent> events;
     final JsonFactory jsonFactory;
     final ObjectMapper objectMapper;
     final Database database;
 
-    /**
-     * SingletonHolder is loaded on the first execution of Singleton.getInstance()
-     * or the first access to SingletonHolder.INSTANCE, not before.
-     * Pugh, Bill (November 16, 2008). "The Java Memory Model"
-     * http://www.cs.umd.edu/~pugh/java/memoryModel/
-     */
-    private static class SingletonHolder {
-        public static final Orla INSTANCE = new Orla();
-    }
 
-    public static Orla getInstance() {
-        return SingletonHolder.INSTANCE;
+    public static synchronized Orla getInstance() {
+        if (Orla.INSTANCE == null) {
+            Orla.INSTANCE = new Orla();
+        }
+        return INSTANCE;
     }
 
     private Orla() {
         this.monitor = OrlaMonitor.getInstance();
         this.jsonFactory = new JsonFactory();
         this.objectMapper = new ObjectMapper();
-        this.database = DatabaseFactory.getInstance(DATA_DIR);
+        this.database = SQLite3.getInstance();
         this.events = this.database.load();
         try {
             this.saxParser = saxParserFactory.newSAXParser();
@@ -73,12 +71,11 @@ public class Orla {
     }
 
     public ObjectNode config() {
-        ObjectNode config = JsonNodeFactory.instance.objectNode();
+        ObjectNode configNode = JsonNodeFactory.instance.objectNode();
         ObjectNode db = JsonNodeFactory.instance.objectNode();
-        db.put("file", this.database.getURL());
-        config.put("database", db);
-        config.put("data_dir", DATA_DIR);
-        return config;
+        db.put("file", config.getDatabaseConnectionString());
+        configNode.put("database", db);
+        return configNode;
     }
 
     /**
@@ -132,24 +129,24 @@ public class Orla {
      * @throws IOException
      */
     public void writeEventsAsJson(final OutputStream outputStream, int weeks) throws IOException {
-        ArrayList<Event> eventsList = getEventsList(weeks, false);
+        ArrayList<BaseEvent> eventsList = getEventsList(weeks, false);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-        for (Event event : eventsList) {
+        for (BaseEvent event : eventsList) {
             arrayNode.add(event.toJson());
         }
         outputStream.write(arrayNode.toString().getBytes());
     }
 
     public void writeAscentDecentByDayAsJson(OutputStream outputStream, int weeks) throws IOException {
-        ArrayList<Event> eventsList = getEventsList(weeks, true);
-        eventsList = Filter.only(eventsList, Event.Unit.mmol_L);
+        ArrayList<BaseEvent> eventsList = getEventsList(weeks, true);
+        eventsList = Filter.only(eventsList, Unit.mmol_L);
 
         Map<String, List<Double>> dayAscDescs = new HashMap<String, List<Double>>(eventsList.size());
         long numDays = 0;
         long numBGs = 0;
         double totalBG = 0d;
-        for (Event event : eventsList) {
-            String date = Event.dateFormat.format(event.date);
+        for (BaseEvent event : eventsList) {
+            String date = BaseEvent.dateFormat.print(event.startTime);
             if (!dayAscDescs.containsKey(date)) {
                 dayAscDescs.put(date, new ArrayList<Double>(10));
                 numDays++;
@@ -163,9 +160,9 @@ public class Orla {
 
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
 
-        Event previous = null;
+        BaseEvent previous = null;
         double ascDesc = 0d;
-        for (Event event : eventsList) {
+        for (BaseEvent event : eventsList) {
             if (previous == null) {
 
                 ascDesc = Math.abs(event.value.doubleValue() - meanBG);
@@ -176,8 +173,8 @@ public class Orla {
                 } else {
                     ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
                     arrayNode.add(dayNode);
-                    dayNode.put("date", Event.dateFormat.format(previous.date));
-                    dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(Event.dateFormat.format(previous.date)).size() / bGsPerDay, 1));
+                    dayNode.put("date", BaseEvent.dateFormat.print(previous.startTime));
+                    dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(BaseEvent.dateFormat.print(previous.startTime)).size() / bGsPerDay, 1));
 
                     // Start over
                     ascDesc = Math.abs(event.value.doubleValue() - previous.value.doubleValue());
@@ -189,14 +186,14 @@ public class Orla {
             // And now for the last day
             ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
             arrayNode.add(dayNode);
-            dayNode.put("date", Event.dateFormat.format(previous.date));
-            dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(Event.dateFormat.format(previous.date)).size() / bGsPerDay, 1));
+            dayNode.put("date", BaseEvent.dateFormat.print(previous.startTime));
+            dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(BaseEvent.dateFormat.print(previous.startTime)).size() / bGsPerDay, 1));
         }
         outputStream.write(arrayNode.toString().getBytes());
     }
 
     public void writeEventsByDayAsJson(OutputStream outputStream, boolean omitEventsList, int weeks) throws IOException {
-        ArrayList<Event> eventsList = getEventsList(weeks, false);
+        ArrayList<BaseEvent> eventsList = getEventsList(weeks, false);
         boolean addEvents = !omitEventsList;
 
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
@@ -206,20 +203,20 @@ public class Orla {
         if (addEvents) dayNode.put("events", dayEvents);
         Integer carbs = 0;
         Double bolus = 0d;
-        dayNode.put("day", Event.dayFormat.format(eventsList.get(0).date));
-        dayNode.put("date", Event.dateFormat.format(eventsList.get(0).date));
-        Event previous = null;
-        for (Event event : eventsList) {
+        dayNode.put("day", BaseEvent.dayFormat.print(eventsList.get(0).startTime));
+        dayNode.put("date", BaseEvent.dateFormat.print(eventsList.get(0).startTime));
+        BaseEvent previous = null;
+        for (BaseEvent event : eventsList) {
             if (event.sameDayAs(previous)) {
-                if (Event.BOLUS_PLUS_BASAL.equals(event.text)) {
-                    dayNode.put(Event.BOLUS_PLUS_BASAL, Convert.round(event.value.doubleValue(), 2));
+                if (BaseEvent.BOLUS_PLUS_BASAL.equals(event.text)) {
+                    dayNode.put(BaseEvent.BOLUS_PLUS_BASAL, Convert.round(event.value.doubleValue(), 2));
                 } else {
                     if (addEvents) dayEvents.add(event.toJson());
                 }
-                if (event.unit == Event.Unit.g) {
+                if (event.unit == Unit.g) {
                     carbs += event.value.intValue();
                 }
-                if (event.unit == Event.Unit.IU && Event.BOLUS.equals(event.text)) {
+                if (event.unit == Unit.IU && BaseEvent.BOLUS.equals(event.text)) {
                     bolus += event.value.doubleValue();
                 }
             } else {
@@ -233,10 +230,10 @@ public class Orla {
                 arrayNode.add(dayNode);
                 dayEvents = JsonNodeFactory.instance.arrayNode();
                 if (addEvents) dayNode.put("events", dayEvents);
-                dayNode.put("day", Event.dayFormat.format(event.date));
-                dayNode.put("date", Event.dateFormat.format(event.date));
-                if (Event.BOLUS_PLUS_BASAL.equals(event.text)) {
-                    dayNode.put(Event.BOLUS_PLUS_BASAL, Convert.round(event.value.doubleValue(), 2));
+                dayNode.put("day", BaseEvent.dayFormat.print(event.startTime));
+                dayNode.put("date", BaseEvent.dateFormat.print(event.startTime));
+                if (BaseEvent.BOLUS_PLUS_BASAL.equals(event.text)) {
+                    dayNode.put(BaseEvent.BOLUS_PLUS_BASAL, Convert.round(event.value.doubleValue(), 2));
                 } else {
                     if (addEvents) dayEvents.add(event.toJson());
                 }
@@ -249,8 +246,8 @@ public class Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    private ArrayList<Event> getEventsList(int weeks, boolean includePreceding) {
-        ArrayList<Event> eventsList = new ArrayList<Event>(events);
+    private ArrayList<BaseEvent> getEventsList(int weeks, boolean includePreceding) {
+        ArrayList<BaseEvent> eventsList = new ArrayList<BaseEvent>(events);
         if (weeks > 0) {
             eventsList = Filter.last(eventsList, Weeks.weeks(weeks), includePreceding);
         } else {
@@ -260,21 +257,21 @@ public class Orla {
     }
 
     public void writeGlucoseReadings(OutputStream outputStream, int weeks) throws IOException {
-        ArrayList<Event> eventsList = getEventsList(weeks, false);
-        eventsList = Filter.only(eventsList, Event.Unit.mmol_L);
+        ArrayList<BaseEvent> eventsList = getEventsList(weeks, false);
+        eventsList = Filter.only(eventsList, Unit.mmol_L);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-        for (Event event : eventsList) {
+        for (BaseEvent event : eventsList) {
             arrayNode.add(event.toJson());
         }
         outputStream.write(arrayNode.toString().getBytes());
     }
 
     public void writeGlucoseReadings(ServletOutputStream outputStream, int weeks, int lower, int higher) throws IOException {
-        ArrayList<Event> eventsList = getEventsList(weeks, false);
-        eventsList = Filter.only(eventsList, Event.Unit.mmol_L);
+        ArrayList<BaseEvent> eventsList = getEventsList(weeks, false);
+        eventsList = Filter.only(eventsList, Unit.mmol_L);
         eventsList = Filter.percentiles(eventsList, lower, higher);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-        for (Event event : eventsList) {
+        for (BaseEvent event : eventsList) {
             arrayNode.add(event.toJson());
         }
         outputStream.write(arrayNode.toString().getBytes());

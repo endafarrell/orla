@@ -1,16 +1,17 @@
 package endafarrell.orla.service.data.parser;
 
-import endafarrell.orla.service.data.Event;
+import endafarrell.orla.service.data.BaseEvent;
+import endafarrell.orla.service.data.Source;
+import endafarrell.orla.service.data.Unit;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.joda.time.DateTime;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 public class TwitterMessageHandler {
@@ -28,16 +29,16 @@ public class TwitterMessageHandler {
         twitter = tf.getInstance();
     }
 
-    public ArrayList<Event> getNewMessages(Set<Event> oldEvents) {
+    public ArrayList<BaseEvent> getNewMessages(Set<BaseEvent> oldEvents) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             ResponseList<DirectMessage> dms = twitter.getDirectMessages();
-            ArrayList<Event> events = new ArrayList<Event>(dms.size());
+            ArrayList<BaseEvent> events = new ArrayList<BaseEvent>(dms.size());
             for (DirectMessage dm : dms) {
 
-                Date date = dm.getCreatedAt();
+                DateTime date = new DateTime(dm.getCreatedAt());
 
-                Event message = new Event(date, Event.Source.Twitter, dm.getText(), null, Event.Unit.none);
+                BaseEvent message = new BaseEvent(date, Source.Twitter, dm.getText(), null, Unit.none);
                 if (oldEvents.contains(message)) {
                     // OK: we're done! There's nothing new to see here.
                     return events;

@@ -1,4 +1,5 @@
-<%@ page import="endafarrell.orla.service.data.Event" %><!DOCTYPE HTML>
+<%@ page import="endafarrell.orla.service.data.BaseEvent" %>
+<!DOCTYPE HTML>
 <html>
 <head>
     <title>Orla - diabetes diary</title>
@@ -175,7 +176,7 @@
                     <table>
                         <tr><td colspan="2"><strong>${day}</strong> ${date}</td></tr>
                         <tr><td>carbs:</td><td>${carbs}</td></tr>
-                        <tr><td>basal+bolus:</td><td>${<%=Event.BOLUS_PLUS_BASAL%>} IU</td></tr>
+                        <tr><td>basal+bolus:</td><td>${<%=BaseEvent.BOLUS_PLUS_BASAL%>} IU</td></tr>
                         <tr><td>bolus:</td><td>${bolus} IU</td></tr>
                         <tr><td>IU/10g:</td><td>${IU_10g}</td></tr>
                     </table>
@@ -225,9 +226,7 @@
         $("#eventsByDayListTmpl").template("thisEventsListTemplate");
         $.getJSON("api/home/events/byDay?w=8", function (model) {
             var data = {days:model};
-            console.log("Model received from eventsByDay: ", model);
             var newMarkup = $.tmpl("thisEventsListTemplate", data);
-            console.log("newMarkup: ", newMarkup);
             newMarkup.appendTo("#events");
             window.scrollTo(0, document.body.scrollHeight);
         });

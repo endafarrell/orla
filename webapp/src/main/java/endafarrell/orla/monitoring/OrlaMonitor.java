@@ -1,7 +1,8 @@
 package endafarrell.orla.monitoring;
 
+import org.joda.time.DateTime;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 public class OrlaMonitor {
@@ -64,23 +65,23 @@ public class OrlaMonitor {
             this.durations.put(path, new ArrayList<TimeDuration>());
         }
         ArrayList<TimeDuration> tds = this.durations.get(path);
-        tds.add(new TimeDuration(new Date(), duration, scale));
+        tds.add(new TimeDuration(DateTime.now(), duration, scale));
     }
 
     public class TimeDuration {
 
-        private Date date;
+        private DateTime date;
         private long duration;
         private TimeScale scale;
 
-        public TimeDuration(Date date, long duration, TimeScale scale) {
+        public TimeDuration(DateTime date, long duration, TimeScale scale) {
             this.date = date;
             this.duration = duration;
             this.scale = scale;
         }
 
         public TimeDuration() {
-            this.date = new Date();
+            this.date = DateTime.now();
             this.duration = 0;
             this.scale = TimeScale.NANO;
         }

@@ -1,7 +1,8 @@
 package endafarrell.orla.api.home;
 
-import endafarrell.orla.service.data.Event;
+import endafarrell.orla.service.data.BaseEvent;
 import endafarrell.orla.service.Orla;
+import org.joda.time.DateTime;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -14,7 +15,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Date;
 
 @WebServlet(urlPatterns = {SmartPixUploadServlet.URL}, name = "API smartpix data-file uploads")
 @MultipartConfig(
@@ -24,7 +24,7 @@ import java.util.Date;
         maxRequestSize = 1024 * 1024 * 5 * 5)
 public class SmartPixUploadServlet extends HttpServlet {
     public static final String URL = "/api/home/smartpix";
-    public static final String FILE_UPLOAD_LOCATION = Orla.DATA_DIR + "/SmartPix";
+    public static final String FILE_UPLOAD_LOCATION = "/var/data/endafarrell/orla/SmartPix";
 
     private Orla orla;
 
@@ -47,10 +47,8 @@ public class SmartPixUploadServlet extends HttpServlet {
                 System.out.println(part);
                 // This can be whatever :-)
                 String fileName = getFileName(part);
-                System.out.println(fileName);
 
-                String date = Event.dateTimeFormat.format(new Date()).replace(" ", "-");
-                System.out.println(date);
+                String date = BaseEvent.dateTimeFormat.print(DateTime.now()).replace(" ", "-");
 
                 part.write(date + "-" + fileName);
                 File smartPix = new File(FILE_UPLOAD_LOCATION + "/" + date + "-" + fileName);
