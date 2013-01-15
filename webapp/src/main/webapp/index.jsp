@@ -1,4 +1,5 @@
 <%@ page import="endafarrell.orla.service.data.BaseEvent" %>
+<%@ page import="endafarrell.orla.service.data.Event" %>
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -184,14 +185,32 @@
                 <td class="dayDetails">
                     {{each events}}
                     <div style="padding-left:${5*time_pct}px;">
-                        {{if unit == "km" || unit == "none"}}
-                        <span class="time">${date.split(" ")[1]}</span><span class="${unit}">${text}</span>
+                        {{if unit == "km" || unit == "none" || unit == null}}
+                            <span class="time">${hhmm}</span>
+                            <span class="${unit}">${text}</span>
                         {{else}}
-                        {{if unit == "mmol_L"}}
-                        <span style="border-right: 8px ${bG_color} solid; padding-right: 4px;"><span class="time">${date.split(" ")[1]}</span><span class="${unit}">${value}</span><span class="unit"> mmol/L</span></span>
-                        {{else}}
-                        <span class="time">${date.split(" ")[1]}</span>${value}<span class="unit">${unit}</span> ${text}</span>
-                        {{/if}}
+                            {{if unit == "mmol_L"}}
+                                <span style="border-right: 8px ${bG_color} solid; padding-right: 4px;">
+                                    <span class="time">${hhmm}</span>
+                                    <span class="mmol_L">${value}</span>
+                                    <span class="unit"> mmol/L</span>
+                                </span>
+                            {{else}}
+                                {{if unit == "IU"}}
+                                    {{if text == value }}
+                                        <!-- nothing -->
+                                    {{else}}
+                                        {{if value == "null"}}
+                                            <span class="time">${hhmm}</span>
+                                            <span class="IU">${text}</span>
+                                        {{else}}
+                                            <span class="time">${hhmm}</span>
+                                            <span class="IU">${value}</span>
+                                            <span class="unit">${unit} ${text}</span>
+                                        {{/if}}
+                                    {{/if}}
+                                {{/if}}
+                            {{/if}}
                         {{/if}}
                     </div>
                     {{/each}}

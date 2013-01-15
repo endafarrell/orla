@@ -3,14 +3,16 @@ package endafarrell.orla.service;
 import endafarrell.orla.service.data.BaseEvent;
 import endafarrell.orla.service.data.Unit;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
+import org.codehaus.jackson.node.ObjectNode;
 import org.joda.time.DateTime;
 import org.joda.time.ReadablePeriod;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
-public class Filter {
+public final class Filter {
     public static ArrayList<BaseEvent> last(final ArrayList<BaseEvent> events, final ReadablePeriod period, boolean includePreceding) {
+        if (events == null) return null;
+        if (events.size() == 0) return null;
         Collections.sort(events);
         ArrayList<BaseEvent> last = new ArrayList<BaseEvent>(events.size());
         DateTime end = new DateTime(events.get(events.size() - 1).startTime);
@@ -70,5 +72,35 @@ public class Filter {
         }
         eventList.trimToSize();
         return eventList;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public static <T extends BaseEvent> ArrayList<T> only(Collection<BaseEvent> events, Class<T> clazz) {
+        ArrayList<T> eventList = new ArrayList<T>(events.size());
+        for (BaseEvent event : events) {
+            // There is a "noinspection unchecked" here which is used to suppress (in this IDE anyway)
+            // compiler warnings - this time about Unchecked casts. Here you can see that we are checking
+            // the canonical name of T which extends BaseEvent and of course that the Class<T> class is a
+            // subclass of BaseEvent in the first place. So: we can suppress the warning as it has been
+            // checked.
+            if (event.getClass().getCanonicalName().equals(clazz.getCanonicalName())) {
+                eventList.add((T) event);
+            }
+        }
+        eventList.trimToSize();
+        return eventList;
+    }
+
+    Set<ObjectNode> getClassSubSet(Class clazz, Set<ObjectNode> objectNodeSet) {
+        if (clazz == null) return objectNodeSet;
+        if (objectNodeSet == null) throw new IllegalArgumentException("Null objectNodeSet is not allowed");
+        String clazzName = clazz.getSimpleName();
+        Set<ObjectNode> subset = new HashSet<ObjectNode>(objectNodeSet.size());
+        for (ObjectNode objectNode : objectNodeSet) {
+            if (objectNode.has("class") && clazzName.equals(objectNode.get("class").getTextValue())){
+                subset.add(objectNode);
+            }
+        }
+        return subset;
     }
 }

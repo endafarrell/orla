@@ -1,18 +1,13 @@
 package endafarrell.orla.service.data.parser;
 
-import endafarrell.orla.service.data.BaseEvent;
-import endafarrell.orla.service.data.Source;
-import endafarrell.orla.service.data.Unit;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
+import endafarrell.orla.service.data.TwitterEvent;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.List;
 
 public class TwitterMessageHandler {
     Twitter twitter;
@@ -29,35 +24,24 @@ public class TwitterMessageHandler {
         twitter = tf.getInstance();
     }
 
-    public ArrayList<BaseEvent> getNewMessages(Set<BaseEvent> oldEvents) {
-        ObjectMapper mapper = new ObjectMapper();
+    public ArrayList<TwitterEvent> getNewMessages(List<TwitterEvent> oldEvents) {
         try {
             ResponseList<DirectMessage> dms = twitter.getDirectMessages();
-            ArrayList<BaseEvent> events = new ArrayList<BaseEvent>(dms.size());
+            ArrayList<TwitterEvent> events = new ArrayList<TwitterEvent>(dms.size());
             for (DirectMessage dm : dms) {
-
-                DateTime date = new DateTime(dm.getCreatedAt());
-
-                BaseEvent message = new BaseEvent(date, Source.Twitter, dm.getText(), null, Unit.none);
+                DateTime date = new DateTime(dm.getCreatedAt(), DateTimeZone.UTC);
+                TwitterEvent message = new TwitterEvent(date, dm.getText());
                 if (oldEvents.contains(message)) {
                     // OK: we're done! There's nothing new to see here.
                     return events;
                 } else {
                     events.add(message);
                 }
-                System.out.println(mapper.writeValueAsString(dm));
             }
             return events;
         } catch (TwitterException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
-        } catch (JsonMappingException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (JsonGenerationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-        return null;
     }
 }

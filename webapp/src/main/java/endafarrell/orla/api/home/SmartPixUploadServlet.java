@@ -1,8 +1,7 @@
 package endafarrell.orla.api.home;
 
-import endafarrell.orla.service.data.BaseEvent;
 import endafarrell.orla.service.Orla;
-import org.joda.time.DateTime;
+import endafarrell.orla.service.processor.ProcessResults;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -11,8 +10,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -43,22 +40,9 @@ public class SmartPixUploadServlet extends HttpServlet {
         Collection<Part> parts = req.getParts();
         System.out.println("doPost called with " + parts.size() + " parts.");
         for (Part part : parts) {
-            try {
-                System.out.println(part);
-                // This can be whatever :-)
-                String fileName = getFileName(part);
-
-                String date = BaseEvent.dateTimeFormat.print(DateTime.now()).replace(" ", "-");
-
-                part.write(date + "-" + fileName);
-                File smartPix = new File(FILE_UPLOAD_LOCATION + "/" + date + "-" + fileName);
-                System.out.println(smartPix.getAbsolutePath());
-                System.out.println(smartPix.length());
-                FileInputStream fis = new FileInputStream(FILE_UPLOAD_LOCATION + "/" + date + "-" + fileName);
-                orla.readSmartPixStream(fis);
-            } catch (NullPointerException npe) {
-                System.err.println("I guess \"" + part.getName() + "\" which has a content-type of "
-                        + part.getContentType() + " isn't really a file ;-)");
+            if (getFileName(part)!=null) {
+                ProcessResults result = orla.readSmartPix(part);
+                System.out.println(result);
             }
         }
         res.sendRedirect(req.getContextPath());

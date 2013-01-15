@@ -1,22 +1,32 @@
 package endafarrell.orla.service.data;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import endafarrell.orla.service.DTF;
+import endafarrell.orla.service.data.persistence.Database;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeComparator;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
-public class BaseEvent implements Event {
-    public static final DateTimeFormatter dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
-    public static final DateTimeFormatter dateFormat = DateTimeFormat.forPattern("yyyy-MM-dd");
-    public static final DateTimeFormatter dayFormat = DateTimeFormat.forPattern("EEE");
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
+public abstract class BaseEvent implements Event {
 
     public static final String BASAL = "basal";
     public static final String BOLUS = "bolus";
     public static final String BOLUS_PLUS_BASAL = "Bolus_plus_Basal";
 
+    static ObjectMapper MAPPER;
+
+    static {
+        MAPPER = new ObjectMapper();
+    }
+
+    public final String id;
     public final DateTime startTime;
     public DateTime endTime;
     public final Source source;
@@ -24,14 +34,19 @@ public class BaseEvent implements Event {
     public final Number value;
     public final Unit unit;
 
-    public BaseEvent(DateTime startTime, Source source, String text, Number value, Unit unit) {
+    protected BaseEvent(String id, DateTime startTime, Source source, String text, Number value, Unit unit) {
         if (startTime == null) throw new IllegalArgumentException("startTime must not be null");
 
+        this.id = id;
         this.startTime = startTime;
         this.source = source;
         this.text = text;
         this.value = value;
         this.unit = unit;
+    }
+
+    public BaseEvent(DateTime startTime, Source source, String text, Number value, Unit unit) {
+        this(null, startTime, source, text, value, unit);
     }
 
     /**
@@ -44,10 +59,12 @@ public class BaseEvent implements Event {
     public int compareTo(Event that) {
         int dateBased = this.startTime.compareTo(that.getStartTime());
         if (dateBased != 0) return dateBased;
-        return this.unit.compareTo(that.getUnit());
+        int unitBased = this.unit.compareTo(that.getUnit());
+        if (unitBased != 0) return unitBased;
+        return this.source.compareTo(that.getSource());
     }
 
-    @Override
+
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -63,7 +80,6 @@ public class BaseEvent implements Event {
         return true;
     }
 
-    @Override
     public int hashCode() {
         int result = startTime != null ? startTime.hashCode() : 0;
         result = 31 * result + (source != null ? source.hashCode() : 0);
@@ -85,47 +101,46 @@ public class BaseEvent implements Event {
         this.endTime = endTime;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public ObjectNode toJson() {
-        ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-        try {
-            objectNode.put("date", dateTimeFormat.print(startTime));
-            objectNode.put("day", dayFormat.print(startTime));
-            objectNode.put("time_pct", getTimeOfDayPercent());
-            objectNode.put("source", source.toString());
-            objectNode.put("text", StringEscapeUtils.escapeHtml(text));
-            if (value == null) {
-                objectNode.putNull("value");
-            } else if (value instanceof Integer) {
-                objectNode.put("value", value.intValue());
-            } else {
-                objectNode.put("value", value.doubleValue());
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+
+        Field[] fields = this.getClass().getFields();
+        for (Field field : fields) {
+            if (Modifier.isStatic(field.getModifiers())) continue;
+            String fieldName = field.getName();
+            Object thisFieldValue;
+            Class thisFieldClass;
+            try {
+                Field thisField = this.getClass().getField(fieldName);
+                thisFieldValue = thisField.get(this);
+                thisFieldClass = thisField.getType();
+                if (thisFieldClass.equals(DateTime.class)) {
+                    if (thisFieldValue != null) {
+                        json.put(fieldName, DTF.JSON_yyyyMMddHHmmssSSSZ.print((DateTime) thisFieldValue));
+                    }
+                } else if (thisFieldClass.equals(Number.class) && thisFieldValue != null) {
+                    if (thisFieldValue instanceof Integer) {
+                        json.put(fieldName, ((Integer) thisFieldValue).intValue());
+                    } else {
+                        json.put(fieldName, ((Double) thisFieldValue).doubleValue());
+                    }
+                } else {
+                    json.put(fieldName, String.valueOf(thisFieldValue));
+                }
+                json.put("day", DTF.PRETTY_DAY_EEE.print(startTime));
+                json.put("hhmm", DTF.PRETTY_HHmm.print(startTime));
+                json.put("time_pct", getTimeOfDayPercent());
+                json.put("class", this.getClass().getSimpleName());
+
+            } catch (Exception reflection) {
+                json.put(fieldName, reflection.getClass().getSimpleName());
             }
-            objectNode.put("unit", unit.toString());
-            if (unit == Unit.mmol_L) {
-                double mmol_L = value.doubleValue();
-                String color = "black";
-                if (16.5 > mmol_L) {
-                    color = "grey";
-                }
-                if (9.0 > mmol_L) {
-                    color = "green";
-                }
-                if (5.0 > mmol_L) {
-                    color = "orange";
-                }
-                if (4.0 > mmol_L) {
-                    color = "red";
-                }
-                if (0 > mmol_L) {
-                    color = "blue";
-                }
-                objectNode.put("bG_color", color);
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println("This causes an ArrayIndexOutOfBoundsException: " + toString());
-            e.printStackTrace();
         }
-        return objectNode;
+        return json;
     }
 
     /**
@@ -164,4 +179,118 @@ public class BaseEvent implements Event {
     }
 
 
+    public static BaseEvent factory(String kvkey, String clazz, String kvvalue) {
+        if (BloodGlucoseEvent.class.getSimpleName().equals(clazz)) {
+            return BloodGlucoseEvent.factory(kvkey, kvvalue);
+        } else if (CarbEvent.class.getSimpleName().equals(clazz)) {
+            return CarbEvent.factory(kvkey, kvvalue);
+        } else if (PumpBasalEvent.class.getSimpleName().equals(clazz)) {
+            return PumpBasalEvent.factory(kvkey, kvvalue);
+        } else if (PumpBolusEvent.class.getSimpleName().equals(clazz)) {
+            return PumpBolusEvent.factory(kvkey, kvvalue);
+        } else if (PumpDailyDoseEvent.class.getSimpleName().equals(clazz)) {
+            return PumpDailyDoseEvent.factory(kvkey, kvvalue);
+        } else if (PumpEvent.class.getSimpleName().equals(clazz)) {
+            return PumpEvent.factory(kvkey, kvvalue);
+        } else if (TwitterEvent.class.getSimpleName().equals(clazz)) {
+            return TwitterEvent.factory(kvkey, kvvalue);
+        } else {
+            throw new UnknownError("Class \"" + clazz + "\" is unknown.");
+        }
+    }
+
+    public static class Struct {
+        public final String id;
+        public final DateTime startTime;
+        public final Source source;
+        public final String text;
+        public final Number value;
+        public final Unit unit;
+        public final ObjectNode json;
+
+        public Struct(String id, DateTime startTime, Source source, String text, Number value, Unit unit, ObjectNode json) {
+            this.id = id;
+            this.startTime = startTime;
+            this.source = source;
+            this.text = text;
+            this.value = value;
+            this.unit = unit;
+            this.json = json;
+        }
+    }
+
+    static Struct struct(String kvvalue) {
+        JsonNode node;
+        try {
+            node = MAPPER.readTree(kvvalue);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+        String id = null;
+        JsonNode idNode = node.get("id");
+        if (idNode != null){
+            id= idNode.getTextValue();
+        }
+        DateTime startTime;
+        try {
+            startTime = DTF.JSON_yyyyMMddHHmmssSSSZ.parseDateTime(node.get(Event.STARTTIME).getTextValue());
+        } catch (IllegalArgumentException e) {
+            System.err.println("Bad startTime in " + node.toString());
+            throw e;
+        }
+
+        Source source = Source.valueOf(node.get("source").getTextValue());
+        String text = node.get("text").getTextValue();
+        Number value = node.get("value").getNumberValue();
+        Unit unit = Unit.valueOf(node.get("unit").getTextValue());
+        return new BaseEvent.Struct(id, startTime, source, text, value, unit, (ObjectNode) node);
+    }
+
+    public String diff(BaseEvent that) {
+        return diff(that, false);
+    }
+
+    public String diff(BaseEvent that, boolean showAllFields) {
+        ObjectNode diffs = JsonNodeFactory.instance.objectNode();
+        ArrayNode clazz = JsonNodeFactory.instance.arrayNode();
+        diffs.put("class", clazz);
+        clazz.add(this.getClass().getSimpleName());
+        clazz.add(that.getClass().getSimpleName());
+
+        boolean dirty = false;
+        if (!this.getClass().getSimpleName().equals(that.getClass().getSimpleName())) {
+            dirty = true;
+        }
+
+        Field[] fields = this.getClass().getFields();
+        for (Field field : fields) {
+            if (Modifier.isStatic(field.getModifiers())) continue;
+            String fieldName = field.getName();
+            String thatFieldValue;
+            try {
+                Field thatField = that.getClass().getField(fieldName);
+                thatFieldValue = String.valueOf(thatField.get(that));
+            } catch (Exception ignored) {
+                thatFieldValue = ignored.getClass().getSimpleName();
+            }
+
+            String thisFieldValue;
+            try {
+                Field thisField = this.getClass().getField(fieldName);
+                thisFieldValue = String.valueOf(thisField.get(this));
+            } catch (Exception ignored) {
+                thisFieldValue = ignored.getClass().getSimpleName();
+            }
+
+            if (!thisFieldValue.equals(thatFieldValue) || showAllFields) {
+                dirty = true;
+                ArrayNode diff = JsonNodeFactory.instance.arrayNode();
+                diffs.put(field.getName(), diff);
+                diff.add(thisFieldValue);
+                diff.add(thatFieldValue);
+            }
+        }
+        if (dirty || showAllFields) return diffs.toString();
+        return null;
+    }
 }

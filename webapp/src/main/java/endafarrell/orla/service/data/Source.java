@@ -4,5 +4,6 @@ public enum Source {
     SmartPix,
     Twitter,
     Endomondo,
+    RunKeeper,
     Orla,
 }

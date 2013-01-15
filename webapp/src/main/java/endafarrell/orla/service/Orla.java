@@ -6,10 +6,14 @@ import endafarrell.orla.service.config.OrlaConfig;
 import endafarrell.orla.service.data.BaseEvent;
 import endafarrell.orla.service.data.Unit;
 import endafarrell.orla.service.data.parser.EndomondoHtmlHandler;
-import endafarrell.orla.service.data.parser.SmartPixSaxHandler;
-import endafarrell.orla.service.data.parser.TwitterMessageHandler;
+import endafarrell.orla.service.data.persistence.Archiver;
 import endafarrell.orla.service.data.persistence.Database;
+import endafarrell.orla.service.data.persistence.FileSystemArchiver;
 import endafarrell.orla.service.data.persistence.SQLite3;
+import endafarrell.orla.service.processor.ProcessResults;
+import endafarrell.orla.service.processor.SmartpixProcessor;
+import endafarrell.orla.service.processor.TwitterProcessor;
+import org.apache.commons.lang.NotImplementedException;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -19,11 +23,11 @@ import org.joda.time.Weeks;
 import org.xml.sax.SAXException;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Part;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 
@@ -45,6 +49,7 @@ public class Orla {
     final JsonFactory jsonFactory;
     final ObjectMapper objectMapper;
     final Database database;
+    final Archiver archiver;
 
 
     public static synchronized Orla getInstance() {
@@ -59,7 +64,8 @@ public class Orla {
         this.jsonFactory = new JsonFactory();
         this.objectMapper = new ObjectMapper();
         this.database = SQLite3.getInstance();
-        this.events = this.database.load();
+        this.archiver = new FileSystemArchiver();
+        this.events = this.database.loadFromDB();
         try {
             this.saxParser = saxParserFactory.newSAXParser();
         } catch (ParserConfigurationException e) {
@@ -73,46 +79,36 @@ public class Orla {
     public ObjectNode config() {
         ObjectNode configNode = JsonNodeFactory.instance.objectNode();
         ObjectNode db = JsonNodeFactory.instance.objectNode();
-        db.put("file", config.getDatabaseConnectionString());
+        db.put("file", config.databaseConnection);
         configNode.put("database", db);
         return configNode;
     }
 
-    /**
-     * Reads the InputStream, assumes it's full of SmartPix XML and adds the parsed Events to the Events set.
-     *
-     * @param stream InputStream of SmartPix XML
-     * @return The new number of (unique) elements in the Events set.
-     */
-    public int readSmartPixStream(InputStream stream) {
-        try {
-            SmartPixSaxHandler smartPixSaxHandler = new SmartPixSaxHandler();
-            saxParser.parse(stream, smartPixSaxHandler);
-            events.addAll(smartPixSaxHandler.getEvents());
-            database.save(events);
-            events = database.load();
-            return events.size();
-        } catch (SAXException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public ProcessResults readSmartPix(Part part) {
+        SmartpixProcessor processor = new SmartpixProcessor();
+        processor.setArchiver(this.archiver);
+        processor.setDatabase(this.database);
+        processor.setInput(part);
+        ProcessResults results = processor.process();
+        events = database.loadFromDB();
+        return results;
     }
 
     public int readEndomondoRuns() {
         EndomondoHtmlHandler endomondoHtmlHandler = new EndomondoHtmlHandler();
         events.addAll(endomondoHtmlHandler.getNewEvents(events));
-        database.save(events);
-        events = database.load();
+        //database.saveToDB(events);
+                    if (1 > 2) throw new NotImplementedException();events = database.loadFromDB();
         return events.size();
     }
 
-    public int readTwitterMessages() {
-        TwitterMessageHandler twitterMessageHandler = new TwitterMessageHandler();
-        events.addAll(twitterMessageHandler.getNewMessages(events));
-        database.save(events);
-        events = database.load();
-        return events.size();
+    public ProcessResults readTwitterMessages() {
+        TwitterProcessor processor = new TwitterProcessor();
+        processor.setArchiver(this.archiver);
+        processor.setDatabase(this.database);
+        ProcessResults results = processor.process();
+        events = database.loadFromDB();
+        return results;
     }
 
 
@@ -146,7 +142,7 @@ public class Orla {
         long numBGs = 0;
         double totalBG = 0d;
         for (BaseEvent event : eventsList) {
-            String date = BaseEvent.dateFormat.print(event.startTime);
+            String date = DTF.PRETTY_yyyyMMdd.print(event.startTime);
             if (!dayAscDescs.containsKey(date)) {
                 dayAscDescs.put(date, new ArrayList<Double>(10));
                 numDays++;
@@ -173,8 +169,8 @@ public class Orla {
                 } else {
                     ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
                     arrayNode.add(dayNode);
-                    dayNode.put("date", BaseEvent.dateFormat.print(previous.startTime));
-                    dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(BaseEvent.dateFormat.print(previous.startTime)).size() / bGsPerDay, 1));
+                    dayNode.put("date", DTF.PRETTY_yyyyMMdd.print(previous.startTime));
+                    dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(DTF.PRETTY_yyyyMMdd.print(previous.startTime)).size() / bGsPerDay, 1));
 
                     // Start over
                     ascDesc = Math.abs(event.value.doubleValue() - previous.value.doubleValue());
@@ -186,14 +182,17 @@ public class Orla {
             // And now for the last day
             ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
             arrayNode.add(dayNode);
-            dayNode.put("date", BaseEvent.dateFormat.print(previous.startTime));
-            dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(BaseEvent.dateFormat.print(previous.startTime)).size() / bGsPerDay, 1));
+            dayNode.put("date", DTF.PRETTY_yyyyMMdd.print(previous.startTime));
+            dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(DTF.PRETTY_yyyyMMdd.print(previous.startTime)).size() / bGsPerDay, 1));
         }
         outputStream.write(arrayNode.toString().getBytes());
     }
 
     public void writeEventsByDayAsJson(OutputStream outputStream, boolean omitEventsList, int weeks) throws IOException {
         ArrayList<BaseEvent> eventsList = getEventsList(weeks, false);
+
+        if (eventsList == null) return;
+
         boolean addEvents = !omitEventsList;
 
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
@@ -203,8 +202,6 @@ public class Orla {
         if (addEvents) dayNode.put("events", dayEvents);
         Integer carbs = 0;
         Double bolus = 0d;
-        dayNode.put("day", BaseEvent.dayFormat.print(eventsList.get(0).startTime));
-        dayNode.put("date", BaseEvent.dateFormat.print(eventsList.get(0).startTime));
         BaseEvent previous = null;
         for (BaseEvent event : eventsList) {
             if (event.sameDayAs(previous)) {
@@ -213,7 +210,7 @@ public class Orla {
                 } else {
                     if (addEvents) dayEvents.add(event.toJson());
                 }
-                if (event.unit == Unit.g) {
+                if (event.unit == Unit.g && event.value != null) {
                     carbs += event.value.intValue();
                 }
                 if (event.unit == Unit.IU && BaseEvent.BOLUS.equals(event.text)) {
@@ -230,8 +227,8 @@ public class Orla {
                 arrayNode.add(dayNode);
                 dayEvents = JsonNodeFactory.instance.arrayNode();
                 if (addEvents) dayNode.put("events", dayEvents);
-                dayNode.put("day", BaseEvent.dayFormat.print(event.startTime));
-                dayNode.put("date", BaseEvent.dateFormat.print(event.startTime));
+                dayNode.put("day", DTF.PRETTY_DAY_EEE.print(event.startTime));
+                dayNode.put("date", DTF.PRETTY_yyyyMMdd.print(event.startTime));
                 if (BaseEvent.BOLUS_PLUS_BASAL.equals(event.text)) {
                     dayNode.put(BaseEvent.BOLUS_PLUS_BASAL, Convert.round(event.value.doubleValue(), 2));
                 } else {

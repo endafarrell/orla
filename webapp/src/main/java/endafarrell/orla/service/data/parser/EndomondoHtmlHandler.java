@@ -1,18 +1,8 @@
 package endafarrell.orla.service.data.parser;
 
 import endafarrell.orla.service.data.BaseEvent;
-import endafarrell.orla.service.data.Source;
-import endafarrell.orla.service.data.Unit;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Set;
 
