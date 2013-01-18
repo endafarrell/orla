@@ -9,6 +9,7 @@ import org.joda.time.Minutes;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.TimeZone;
 
 import static org.testng.Assert.*;
 
@@ -18,6 +19,34 @@ public class BaseEventTest {
     public void testCompareTo() throws Exception {
 
     }
+
+
+    @Test
+    public void testContains() throws Exception {
+        ArrayList<TwitterEvent> list = new ArrayList<TwitterEvent>();
+        TwitterEvent tweet1 = new TwitterEvent(DateTime.now(), "I love Lucy");
+        TwitterEvent tweet2 = new TwitterEvent(DateTime.now(), "This is not a tweet");
+        TwitterEvent tweet3 = new TwitterEvent(DateTime.now(), "3 is a magic number");
+        list.add(tweet1);
+        list.add(tweet2);
+        list.add(tweet3);
+        assertTrue(list.contains(tweet1));
+
+        DateTime here = new DateTime(2013,1,18,21,15,DateTimeZone.forID("Europe/Berlin"));
+        DateTime utc = new DateTime(2013,1,18,20,15,DateTimeZone.UTC);
+
+        // This next line fails (and in this app I want it to succeed)!
+        //assertEquals(here, utc);
+        // The above means that we need to check the equals implementation of the BaseEvent
+
+        String tweet = "BaseEventTest.testContains checks the DateTime too";
+        TwitterEvent hereTweet = new TwitterEvent(here, tweet);
+        list.add(hereTweet);
+
+        assertTrue(list.contains(new TwitterEvent(utc, tweet)));
+
+    }
+
 
     @Test
     public void testDiff1() throws Exception {

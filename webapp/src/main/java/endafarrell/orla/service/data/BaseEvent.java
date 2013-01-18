@@ -9,6 +9,8 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeComparator;
+import org.joda.time.DateTimeUtils;
+import org.joda.time.Interval;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -71,7 +73,15 @@ public abstract class BaseEvent implements Event {
 
         BaseEvent event = (BaseEvent) o;
 
-        if (startTime != null ? !startTime.equals(event.startTime) : event.startTime != null) return false;
+        // The second line returns false if the DateTimeZones for the two are different,
+        // EVEN if the "when converted to UTC " times are the same
+        //// if (startTime != null ? !startTime.equals(event.startTime) : event.startTime != null) return false;
+        // In this app that is not good, so we ...
+       if (DateTimeUtils.getInstantMillis(startTime) != DateTimeUtils.getInstantMillis(event.startTime)) return false;
+
+        //Interval interval = new Interval(startTime, event.startTime);
+        //if (interval.toDurationMillis() > 0) return false;
+
         if (source != event.source) return false;
         if (text != null ? !text.equals(event.text) : event.text != null) return false;
         if (unit != event.unit) return false;
@@ -293,4 +303,6 @@ public abstract class BaseEvent implements Event {
         if (dirty || showAllFields) return diffs.toString();
         return null;
     }
+
+    public String toString() { return this.toJson().toString(); }
 }
