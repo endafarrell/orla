@@ -80,8 +80,7 @@ public class TwitterProcessor extends ObtainingProcessor {
                         System.out.println("Twitter events overlapped! Twitter count is " + events.size());
                         break;
                     } else {
-                        boolean added = events.add(message);
-
+                        events.add(message);
                     }
                     countUntilOverlap++;
                 }

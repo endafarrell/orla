@@ -8,7 +8,6 @@ public interface Event extends Comparable<Event> {
     String STARTTIME = "startTime";
 
     DateTime getStartTime();
-    DateTime getEndTime();
     ObjectNode toJson();
 
     /**

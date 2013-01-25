@@ -1,7 +1,6 @@
 package endafarrell.orla.service.data;
 
 import endafarrell.orla.service.DTF;
-import endafarrell.orla.service.data.persistence.Database;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -10,7 +9,6 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeComparator;
 import org.joda.time.DateTimeUtils;
-import org.joda.time.Interval;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -18,7 +16,6 @@ import java.lang.reflect.Modifier;
 
 public abstract class BaseEvent implements Event {
 
-    public static final String BASAL = "basal";
     public static final String BOLUS = "bolus";
     public static final String BOLUS_PLUS_BASAL = "Bolus_plus_Basal";
 
@@ -77,10 +74,7 @@ public abstract class BaseEvent implements Event {
         // EVEN if the "when converted to UTC " times are the same
         //// if (startTime != null ? !startTime.equals(event.startTime) : event.startTime != null) return false;
         // In this app that is not good, so we ...
-       if (DateTimeUtils.getInstantMillis(startTime) != DateTimeUtils.getInstantMillis(event.startTime)) return false;
-
-        //Interval interval = new Interval(startTime, event.startTime);
-        //if (interval.toDurationMillis() > 0) return false;
+        if (DateTimeUtils.getInstantMillis(startTime) != DateTimeUtils.getInstantMillis(event.startTime)) return false;
 
         if (source != event.source) return false;
         if (text != null ? !text.equals(event.text) : event.text != null) return false;
@@ -101,14 +95,6 @@ public abstract class BaseEvent implements Event {
 
     public DateTime getStartTime() {
         return startTime;
-    }
-
-    public DateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(DateTime endTime) {
-        this.endTime = endTime;
     }
 
     public String getId() {
