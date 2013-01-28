@@ -1,6 +1,7 @@
 package endafarrell.orla.service.processor;
 
 import com.ctc.wstx.sax.WstxSAXParserFactory;
+import endafarrell.orla.service.Orla;
 import endafarrell.orla.service.data.*;
 import endafarrell.orla.service.data.persistence.PersistenceResults;
 import org.apache.commons.io.IOUtils;
@@ -24,7 +25,8 @@ import java.util.ArrayList;
 public class SmartpixProcessor extends ReceivingProcessor {
     final SAXParser saxParser;
 
-    public SmartpixProcessor() {
+    public SmartpixProcessor(Orla orla) {
+        super(orla);
         try {
             this.saxParser = WstxSAXParserFactory.newInstance().newSAXParser();
         } catch (ParserConfigurationException e) {
@@ -34,7 +36,6 @@ public class SmartpixProcessor extends ReceivingProcessor {
         }
     }
 
-    @Override
     public ProcessResults process() {
             if (database == null) throw new IllegalStateException("database must be set before calling process");
             if (archiver == null) throw new IllegalStateException("archiver must be set before calling process");

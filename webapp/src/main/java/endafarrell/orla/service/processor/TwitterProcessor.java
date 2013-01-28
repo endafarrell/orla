@@ -1,6 +1,7 @@
 package endafarrell.orla.service.processor;
 
 import endafarrell.orla.service.Filter;
+import endafarrell.orla.service.Orla;
 import endafarrell.orla.service.data.BaseEvent;
 import endafarrell.orla.service.data.TwitterEvent;
 import org.apache.commons.lang.StringUtils;
@@ -16,7 +17,8 @@ public class TwitterProcessor extends ObtainingProcessor {
     final Twitter twitter;
     transient boolean stop = false;
 
-    public TwitterProcessor() {
+    public TwitterProcessor(Orla orla) {
+        super(orla);
         ConfigurationBuilder endafarrell_med = new ConfigurationBuilder();
         endafarrell_med.setDebugEnabled(true)
                 .setOAuthConsumerKey(config.twitterOAuthConsumerKey)
@@ -95,7 +97,6 @@ public class TwitterProcessor extends ObtainingProcessor {
         return new ProcessResults(payloadCount, countUntilOverlap, totalCountForClass);
     }
 
-    @Override
     public ProcessResults process() {
         if (database == null) throw new IllegalStateException("database must be set before calling process");
         if (archiver == null) throw new IllegalStateException("archiver must be set before calling process");

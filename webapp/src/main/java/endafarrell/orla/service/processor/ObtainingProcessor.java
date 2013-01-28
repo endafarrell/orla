@@ -1,5 +1,6 @@
 package endafarrell.orla.service.processor;
 
+import endafarrell.orla.service.Orla;
 import endafarrell.orla.service.data.BaseEvent;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
@@ -8,6 +9,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 public abstract class ObtainingProcessor extends BaseProcessor {
+
+    public ObtainingProcessor(Orla orla) {
+        super(orla);
+    }
 
     abstract ProcessResults obtain();
     InputStream eventsToInputSteam() {

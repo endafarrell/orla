@@ -12,13 +12,11 @@ public class MonitoringFilter implements Filter {
     OrlaMonitor monitor;
     FilterConfig config;
 
-    @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         this.monitor = OrlaMonitor.getInstance();
         this.config = filterConfig;
     }
 
-    @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         long before = System.nanoTime();
         chain.doFilter(req, res);
@@ -27,7 +25,6 @@ public class MonitoringFilter implements Filter {
         this.monitor.recordResponseTime(path, after - before, OrlaMonitor.TimeScale.NANO);
     }
 
-    @Override
     public void destroy() {
         this.monitor.dumpAllData();
     }

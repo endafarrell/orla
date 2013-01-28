@@ -1,12 +1,12 @@
 package endafarrell.orla.service.data.persistence;
 
-import endafarrell.orla.service.data.BaseEvent;
+import endafarrell.orla.service.data.Event;
+import endafarrell.orla.service.data.EventFactory;
 import org.codehaus.jackson.node.ObjectNode;
 
 import java.sql.*;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class SQLite3 extends Database {
     final Connection connection;
@@ -70,13 +70,13 @@ public class SQLite3 extends Database {
     }
 
 
-    public Set<BaseEvent> loadFromDB() {
+    public HashSet<Event> loadFromDB() {
         StringBuilder sql = new StringBuilder();
         try {
 //            Statement stmt = this.connection.createStatement();
 //            sql.append("SELECT utc, source, text, value, unit from events;");
 //            ResultSet resultSet = stmt.executeQuery(sql.toString());
-            HashSet<BaseEvent> events = new HashSet<BaseEvent>(5000);
+            HashSet<Event> events = new HashSet<Event>(5000);
 //            while (resultSet.next()) {
 //                DateTime date;
 //                date = FULL_yyyyMMddHHmmssSSS.parseDateTime(resultSet.getString("utc"));
@@ -121,7 +121,8 @@ public class SQLite3 extends Database {
                 String kvkey = resultSet.getString("kvkey");
                 String clazz = resultSet.getString("clazz");
                 String kvvalue = resultSet.getString("kvvalue");
-                BaseEvent event = BaseEvent.factory(kvkey, clazz, kvvalue);
+//                BaseEvent event = BaseEvent.factory(kvkey, clazz, kvvalue);
+                Event event = EventFactory.create(kvkey, clazz, kvvalue);
                 events.add(event);
             }
             return events;

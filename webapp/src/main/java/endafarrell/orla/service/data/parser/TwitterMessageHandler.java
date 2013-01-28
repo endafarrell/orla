@@ -12,18 +12,6 @@ import java.util.List;
 public class TwitterMessageHandler {
     Twitter twitter;
 
-    public TwitterMessageHandler() {
-        ConfigurationBuilder endafarrell_med = new ConfigurationBuilder();
-        endafarrell_med.setDebugEnabled(true)
-                .setOAuthConsumerKey(System.getenv("ORLA_TWITTER_OAUTH_CONSUMER_KEY"))
-                .setOAuthConsumerSecret(System.getenv("ORLA_TWITTER_OAUTH_CONSUMER_SECRET"))
-                .setOAuthAccessToken(System.getenv("ORLA_TWITTER_OAUTH_ACCESS_TOKEN"))
-                .setOAuthAccessTokenSecret(System.getenv("ORLA_TWITTER_OAUTH_ACCESS_TOKEN_SECRET"));
-
-        TwitterFactory tf = new TwitterFactory(endafarrell_med.build());
-        twitter = tf.getInstance();
-    }
-
     public ArrayList<TwitterEvent> getNewMessages(List<TwitterEvent> oldEvents) {
         try {
             ResponseList<DirectMessage> dms = twitter.getDirectMessages();

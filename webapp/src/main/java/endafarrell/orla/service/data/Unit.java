@@ -20,9 +20,5 @@ public enum Unit {
     /**
      * For when there's no value: eg tweets
      */
-    none,
-    /**
-     * percent, used for HbA1C readings
-     */
-    pct
+    none
 }

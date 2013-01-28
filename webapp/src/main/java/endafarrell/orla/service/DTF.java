@@ -15,10 +15,10 @@ public final class DTF {
     public static final DateTimeFormatter PRETTY_HHmm = DateTimeFormat.forPattern("HH:mm");
 
 
-    DTF() {
-        // Note that the ARCHIVER_yyyyMMddTHHmmss is NOT set to UTC to help the filename to stay as expected
-        PRETTY_yyyyMMdd.withZoneUTC();
-        JSON_yyyyMMddHHmmssSSSZ.withZoneUTC();
-        PRETTY_DAY_EEE.withZoneUTC();
-    }
+//    DTF() {
+//        // Note that the ARCHIVER_yyyyMMddTHHmmss is NOT set to UTC to help the filename to stay as expected
+//        PRETTY_yyyyMMdd.withZoneUTC();
+//        JSON_yyyyMMddHHmmssSSSZ.withZoneUTC();
+//        PRETTY_DAY_EEE.withZoneUTC();
+//    }
 }

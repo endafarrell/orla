@@ -179,7 +179,6 @@
                         <tr><td>carbs:</td><td>${carbs}</td></tr>
                         <tr><td>basal+bolus:</td><td>${<%=BaseEvent.BOLUS_PLUS_BASAL%>} IU</td></tr>
                         <tr><td>bolus:</td><td>${bolus} IU</td></tr>
-                        <tr><td>IU/10g:</td><td>${IU_10g}</td></tr>
                     </table>
                 </td>
                 <td class="dayDetails">

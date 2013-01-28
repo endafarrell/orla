@@ -1,5 +1,6 @@
 package endafarrell.orla.service;
 
+import endafarrell.orla.api.OrlaHttpServlet;
 import endafarrell.orla.service.processor.ProcessResults;
 import org.testng.annotations.Test;
 
@@ -13,7 +14,7 @@ import java.util.Collection;
 import static org.testng.Assert.assertEquals;
 
 
-public class OrlaTest {
+public class OrlaImplTest {
     public class FilePart implements Part {
         final File file;
 
@@ -60,7 +61,7 @@ public class OrlaTest {
 
     @Test
     public void testReadFile() throws Exception {
-        Orla orla = Orla.getInstance();
+        Orla orla = OrlaImpl.getInstance();
         Part part1 = new FilePart("src/test/resources/SmartPix/G0030950.XML");
         Part part2 = new FilePart("src/test/resources/SmartPix/G0030950.XML");
         ProcessResults first = orla.readSmartPix(part1);
@@ -70,8 +71,8 @@ public class OrlaTest {
 
     @Test(dependsOnMethods = {"testReadFile"})
     public void testWriteEventsAsJson() throws Exception {
-        Orla orla = Orla.getInstance();
-        orla.writeEventsAsJson(System.out);
+        Orla orla = OrlaImpl.getInstance();
+        orla.writeEventsAsJson(System.out, OrlaHttpServlet.DEFAULT_NUM_WEEKS);
     }
 
 }

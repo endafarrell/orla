@@ -31,5 +31,5 @@ public interface Event extends Comparable<Event> {
      */
     int getTimeOfDayPercent();
 
-    String getId();
+    Number getValue();
 }

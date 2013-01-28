@@ -8,12 +8,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/api/home/twitter"})
-public class TwitterTriggerServlet extends OrlaHttpServlet {
+@WebServlet(urlPatterns = {"/api/home/healthgraph"})
+public class HealthGraphServlet extends OrlaHttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        orla.readTwitterMessages();
-        res.sendRedirect(req.getContextPath());
+        res.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "oops - this is not yet implemented");
+        //res.sendRedirect(req.getContextPath());
     }
 }

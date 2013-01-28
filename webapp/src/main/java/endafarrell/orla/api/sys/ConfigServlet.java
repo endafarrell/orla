@@ -1,6 +1,8 @@
 package endafarrell.orla.api.sys;
 
-import endafarrell.orla.service.Orla;
+import endafarrell.orla.api.OrlaHttpServlet;
+import endafarrell.orla.service.config.OrlaConfig;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
@@ -8,23 +10,14 @@ import org.codehaus.jackson.node.ObjectNode;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 
-@WebServlet(urlPatterns = {"/api/sys/config"}, name = "API sys")
-public class ConfigServlet extends HttpServlet {
-
-    Orla orla;
-
-    @Override
-    public void init() {
-        this.orla = Orla.getInstance();
-    }
-
+@WebServlet(urlPatterns = {"/api/sys/config"}, name = "The configuration of the service")
+public class ConfigServlet extends OrlaHttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -50,15 +43,16 @@ public class ConfigServlet extends HttpServlet {
             registrations.add(registrationNode);
         }
 
-        ObjectNode orlaConfig = orla.config();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode configJson = JsonNodeFactory.instance.objectNode();
+        configJson.put("orlaConfig", mapper.convertValue(OrlaConfig.getInstance(), ObjectNode.class));// .writeValueAsString(OrlaConfig.getInstance()) );
         ObjectNode servletContext = JsonNodeFactory.instance.objectNode();
-
         servletContext.put("servletRegistrations", registrations);
-        orlaConfig.put("servletContext", servletContext);
+        configJson.put("servletContext", servletContext);
 
         res.setContentType("text/json");
         OutputStream outputStream = res.getOutputStream();
-        outputStream.write(orlaConfig.toString().getBytes());
+        outputStream.write(configJson.toString().getBytes());
         outputStream.flush();
     }
 }

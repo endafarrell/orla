@@ -48,7 +48,7 @@ public class BloodGlucoseEvent extends BaseEvent {
 
     static BloodGlucoseEvent factory(String id, String kvvalue) {
         BaseEvent.Struct struct = BaseEvent.struct(kvvalue);
-        Double value = (struct.value == null) ? null : struct.value.doubleValue();
+        Double value = struct.value == null ? null : struct.value.doubleValue();
 
         Integer D = null;
         if (struct.json.has("D")) {

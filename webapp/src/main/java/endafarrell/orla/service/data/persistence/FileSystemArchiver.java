@@ -1,15 +1,15 @@
 package endafarrell.orla.service.data.persistence;
 
 import endafarrell.orla.service.DTF;
-import endafarrell.orla.service.data.BaseEvent;
+import endafarrell.orla.service.data.Event;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.codehaus.jackson.node.ObjectNode;
 import org.joda.time.DateTime;
 
 import java.io.*;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class FileSystemArchiver extends Archiver {
 
@@ -42,7 +42,7 @@ public class FileSystemArchiver extends Archiver {
     }
 
     @Override
-    public Set<BaseEvent> loadFromDB() {
+    public HashSet<Event> loadFromDB() {
         throw new NotImplementedException();
     }
 
