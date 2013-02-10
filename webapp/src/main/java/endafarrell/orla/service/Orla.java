@@ -1,6 +1,8 @@
 package endafarrell.orla.service;
 
+import endafarrell.orla.api.home.HealthGraphCallbackServlet;
 import endafarrell.orla.service.config.OrlaConfig;
+import endafarrell.orla.service.data.HealthGraph;
 import endafarrell.orla.service.data.persistence.Archiver;
 import endafarrell.orla.service.data.persistence.Database;
 import endafarrell.orla.service.processor.ProcessResults;
@@ -10,7 +12,7 @@ import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public interface Orla {
+public interface Orla extends HealthGraph {
 
     ProcessResults readSmartPix(Part part);
 

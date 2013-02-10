@@ -1,12 +1,13 @@
 package endafarrell.orla.service;
 
 import com.ctc.wstx.sax.WstxSAXParserFactory;
+import endafarrell.healthgraph4j.*;
+import endafarrell.orla.OrlaException;
 import endafarrell.orla.monitoring.OrlaMonitor;
 import endafarrell.orla.service.config.OrlaConfig;
 import endafarrell.orla.service.data.BaseEvent;
 import endafarrell.orla.service.data.Event;
 import endafarrell.orla.service.data.Unit;
-import endafarrell.orla.service.data.parser.EndomondoHtmlHandler;
 import endafarrell.orla.service.data.persistence.Archiver;
 import endafarrell.orla.service.data.persistence.Database;
 import endafarrell.orla.service.data.persistence.FileSystemArchiver;
@@ -14,7 +15,8 @@ import endafarrell.orla.service.data.persistence.SQLite3;
 import endafarrell.orla.service.processor.ProcessResults;
 import endafarrell.orla.service.processor.SmartpixProcessor;
 import endafarrell.orla.service.processor.TwitterProcessor;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -36,7 +38,7 @@ import java.util.*;
  * Simple diabetes management service
  *
  * @author Enda Farrell
- * @since 20120-10-23
+ * @since 2012-10-23
  */
 public class OrlaImpl implements Orla {
     private static OrlaImpl INSTANCE;
@@ -52,16 +54,23 @@ public class OrlaImpl implements Orla {
     final OrlaConfig config;
 
     HashSet<Event> events;
+    private HealthGraph healthGraph;
 
 
     public static synchronized Orla getInstance() {
         if (OrlaImpl.INSTANCE == null) {
-            OrlaImpl.INSTANCE = new OrlaImpl();
+            try {
+                OrlaImpl.INSTANCE = new OrlaImpl();
+            } catch (ConfigurationException e) {
+                throw new ExceptionInInitializerError(e);
+            } catch (HealthGraphException e) {
+                throw new ExceptionInInitializerError(e);
+            }
         }
         return INSTANCE;
     }
 
-    private OrlaImpl() {
+    private OrlaImpl() throws ConfigurationException, HealthGraphException {
         this.monitor = OrlaMonitor.getInstance();
         this.jsonFactory = new JsonFactory();
         this.objectMapper = new ObjectMapper();
@@ -78,6 +87,24 @@ public class OrlaImpl implements Orla {
         } catch (SAXException e) {
             throw new RuntimeException(e);
         }
+                // Read my own config files
+        PropertiesConfiguration properties =
+                new PropertiesConfiguration("/var/data/endafarrell/healthgraph4j/config/healthgraph4j.properties");
+        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+        configurationBuilder.setClientID(properties.getString("ClientID"));
+        configurationBuilder.setClientSecret(properties.getString("ClientSecret"));
+        configurationBuilder.setAuthorizationURL(properties.getString("AuthorizationURL"));
+        configurationBuilder.setAccessTokenURL(properties.getString("AccessTokenURL"));
+        configurationBuilder.setDeAuthorizationURL(properties.getString("DeAuthorizationURL"));
+        configurationBuilder.setCallbackURL("http://localhost:8080/orla/api/home/healthgraph");
+        configurationBuilder.setHttpsProxyHost(properties.getString("https.proxyHost"));
+        configurationBuilder.setHttpsProxyPort(properties.getString("https.proxyPort"));
+
+        Configuration configuration = configurationBuilder.build();
+
+        // With the configuration, create a factory and then a new HealthGraph
+        HealthGraphFactory factory = new HealthGraphFactory(configuration);
+        healthGraph = factory.getInstance();
 
     }
 
@@ -94,6 +121,12 @@ public class OrlaImpl implements Orla {
         ProcessResults results = processor.process();
         events = database.loadFromDB();
         return results;
+    }
+
+    public ProcessResults readHealthgraphFitnessActivities() {
+        //HealthGraphProcessor processor = new HealthGraphProcessor(this);
+        return null;
+
     }
 
     public Database getDatabase() {
@@ -269,5 +302,22 @@ public class OrlaImpl implements Orla {
         }
         outputStream.write(arrayNode.toString().getBytes());
     }
+
+    public String getHealthGraphAuthorisation() throws OrlaException {
+        try {
+            return healthGraph.authenticate(HealthGraph.AuthorisationMethod.OAuthCallback);
+        } catch (HealthGraphException e) {
+            throw new OrlaException(e);
+        }
+    }
+
+    public void authenticate(String authenticationCode) throws OrlaException {
+        try {
+            healthGraph.authenticate(authenticationCode);
+        } catch (HealthGraphException e) {
+            throw new OrlaException(e);
+        }
+    }
+
 
 }
