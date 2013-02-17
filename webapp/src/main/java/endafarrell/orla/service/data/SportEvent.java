@@ -12,9 +12,9 @@ public class SportEvent extends BaseEvent {
         super(id, startTime, source, text, value, unit);
     }
 
-    public static BaseEvent factory(String kvvalue) {
+    public static BaseEvent factory(String id, String kvvalue) {
         BaseEvent.Struct struct = BaseEvent.struct(kvvalue);
         Double value = (struct.value == null) ? null : struct.value.doubleValue();
-        return new SportEvent(struct.id, struct.startTime, struct.source, struct.text, value, struct.unit);
+        return new SportEvent(id, struct.startTime, struct.source, struct.text, value, struct.unit);
     }
 }

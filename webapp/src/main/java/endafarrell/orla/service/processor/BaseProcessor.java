@@ -15,11 +15,13 @@ public abstract class BaseProcessor implements Processor {
     final Archiver archiver;
     ArrayList<BaseEvent> events;
     final OrlaConfig config;
+    final Orla orla;
 
     public BaseProcessor(Orla orla) {
         this.database = orla.getDatabase();
         this.archiver = orla.getArchiver();
         this.config = orla.getConfig();
+        this.orla = orla;
     }
 
     List<ObjectNode> eventsToJsonList() {

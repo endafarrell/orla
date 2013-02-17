@@ -226,7 +226,7 @@
         <li><a href="graph.jsp?w=4&l=25&h=75">graphs</a></li>
         <li>&crarr;</li>
         <li><a href="smartpix.jsp">add SmartPix</a></li>
-        <li><a href="api/home/endomondo">check exercise</a></li>
+        <li><a href="api/home/healthgraph">check exercise</a></li>
         <li><a href="api/home/twitter">check messages</a></li>
         <li>&crarr;</li>
         <li><a href="api/home/events">see events</a></li>

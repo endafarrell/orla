@@ -17,6 +17,8 @@ public final class EventFactory {
             return PumpEvent.factory(kvkey, kvvalue);
         } else if (TwitterEvent.class.getSimpleName().equals(clazz)) {
             return TwitterEvent.factory(kvkey, kvvalue);
+        } else if (SportEvent.class.getSimpleName().equals(clazz)) {
+            return SportEvent.factory(kvvalue, kvvalue);
         } else {
             throw new UnknownError("Class \"" + clazz + "\" is unknown.");
         }

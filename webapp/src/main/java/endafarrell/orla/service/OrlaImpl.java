@@ -12,6 +12,7 @@ import endafarrell.orla.service.data.persistence.Archiver;
 import endafarrell.orla.service.data.persistence.Database;
 import endafarrell.orla.service.data.persistence.FileSystemArchiver;
 import endafarrell.orla.service.data.persistence.SQLite3;
+import endafarrell.orla.service.processor.HealthGraphProcessor;
 import endafarrell.orla.service.processor.ProcessResults;
 import endafarrell.orla.service.processor.SmartpixProcessor;
 import endafarrell.orla.service.processor.TwitterProcessor;
@@ -124,9 +125,15 @@ public class OrlaImpl implements Orla {
     }
 
     public ProcessResults readHealthgraphFitnessActivities() {
-        //HealthGraphProcessor processor = new HealthGraphProcessor(this);
-        return null;
+        HealthGraphProcessor processor = new HealthGraphProcessor(this);
+        ProcessResults results = processor.process();
+        events = database.loadFromDB();
+        return results;
 
+    }
+
+    public HealthGraph getHealthGraphClient() {
+        return this.healthGraph;
     }
 
     public Database getDatabase() {
