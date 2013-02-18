@@ -237,9 +237,11 @@ public class OrlaImpl implements Orla {
         arrayNode.add(dayNode);
         ArrayNode dayEvents = JsonNodeFactory.instance.arrayNode();
         if (addEvents) dayNode.put("events", dayEvents);
+
         Integer carbs = 0;
         Double bolus = 0d;
         Event previous = null;
+
         for (Event event : eventsList) {
             if (event.sameDayAs(previous)) {
                 if (BaseEvent.BOLUS_PLUS_BASAL.equals(event.getText())) {
@@ -247,7 +249,7 @@ public class OrlaImpl implements Orla {
                 } else {
                     if (addEvents) dayEvents.add(event.toJson());
                 }
-                if (event.getUnit() == Unit.g && event.getUnit() != null) {
+                if (event.getUnit() == Unit.g) {
                     carbs += event.getValue().intValue();
                 }
                 if (event.getUnit() == Unit.IU && BaseEvent.BOLUS.equals(event.getText())) {

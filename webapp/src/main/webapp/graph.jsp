@@ -194,21 +194,9 @@
         <h3>Ascent/descent</h3>
         <div id="pha" style="width: 90%; height: 300px"></div>
     </div>
-    <div class="graph">
-        <h3>Percentiled values</h3>
 
-        <div id="ph1" style="width:90%; height:300px;"></div>
-        <p>The above are the readings within the <span id="ph1LowerPercentile"></span> and
-           <span id="ph1HigherPercentile"></span> percentiles. By chopping off the lowest and highest readings, overall
-           patterns are easier to see.</p>
-    </div>
     <div class="graph">
-        <h3>Percentiled values by hour of day</h3>
-
-        <div id="ph2" style="width:90%; height:300px;"></div>
-    </div>
-    <div class="graph">
-        <h3>Carbs and bolus per day</h3>
+        <h3>Carbs ratio per day</h3>
         <div id="ph3" style="width: 90%; height:300px;"></div>
     </div>
 </section>
@@ -218,8 +206,6 @@
 
 
     $(document).ready(function () {
-        $("#ph1LowerPercentile").html($.QueryString["l"]);
-        $("#ph1HigherPercentile").html($.QueryString["h"]);
         var plots = [];
         var data = [];
         var hours = {};
@@ -254,6 +240,9 @@
         }
         function bolusFormatter(v, axis) {
             return v.toFixed(axis.tickDecimals) +"IU";
+        }
+        function carbRatioFormatter(v, axis) {
+            return v.toFixed(axis.tickDecimals) + "U/10g";
         }
         function bGFormatter(v, axis) {
             return v.toFixed(axis.tickDecimals) + " mmol/L";
@@ -306,7 +295,11 @@
             d.setUTCHours(23);
             var i = d.getTime();
             do {
-                markings.push({ xaxis: { from: i, to: i + 8 * 60 * 60 * 1000}, yaxis: { from: 0, to: 1.75 }, color: "#dddddd"});
+                markings.push({
+                    xaxis: { from: i, to: i + 8 * 60 * 60 * 1000},
+                    yaxis: { from: 0, to: axes.yaxis.max * 0.1 },
+                    color: "#dddddd"
+                });
                 i += 24 * 60 * 60 * 1000;
             } while (i < axes.xaxis.max);
 
@@ -321,20 +314,22 @@
             do {
                 // when we don't set yaxis, the rectangle automatically
                 // extends to infinity upwards and downwards
-                markings.push({ xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 }, yaxis: { from: 0, to: 0.75 }, color: "#32cd32" });
+                markings.push({
+                    xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 },
+                    yaxis: { from: 0, to: axes.yaxis.max * 0.05 },
+                    color: "#32cd32"
+                });
                 i += 7 * 24 * 60 * 60 * 1000;
             } while (i < axes.xaxis.max);
-
-
-
             return markings;
-
         }
+
+        // Glucose readings
         var previousPoint = null;
         $.getJSON("api/home/glucose" + window.location.search, function (model) {
             var bGs = [];
             for (var index = 0; index < model.length; index++) {
-                bGs.push([new Date(model[index].date), model[index].value]);
+                bGs.push([new Date(model[index].startTime), model[index].value]);
             }
             plots.push($.plot($("#ph0"), [bGs], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
         });
@@ -347,52 +342,22 @@
             plots.push($.plot($("#pha"), [ads], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
         });
 
-        $.getJSON("api/home/glucose/percentiled" + window.location.search, function (model) {
-            for (var index =0; index < model.length; index++) {
-                data.push([new Date(model[index].date), model[index].value]);
-                hours[model[index].date.substr(11, 2)].push(model[index].value);
-            }
-            plots.push($.plot($("#ph1"), [data], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
-
-            for (var hourIndex =0; hourIndex < hourLabels.length; hourIndex++) {
-                var sum = 0;
-                if (hours[hourLabels[hourIndex]]) {
-                    for (var i = 0, l = hours[hourLabels[hourIndex]].length; i < l; i++) {
-                        sum += hours[hourLabels[hourIndex]][i]
-                    }
-                    if (hours[hourLabels[hourIndex]].length > 0) {
-                        hourMean.push([parseInt(hourIndex)+0.5, sum / hours[hourLabels[hourIndex]].length]);
-                        hourCounts.push([parseInt(hourIndex), hours[hourLabels[hourIndex]].length]);
-                    } else {
-                        hourCounts.push([parseInt(hourIndex), 0]);
-                    }
-                }
-            }
-            plots.push($.plot($("#ph2"),
-                             [
-                                 {data:hourMean, label:"Mean bG during this hour"},
-                                 {data:hourCounts, label:"Number of tests during this hour", bars: { show: true }, lines: { show: false}, points: {show: false}, yaxis:2}
-                             ],
-                             $.extend(true, {}, flotOptions, {xaxes:[{mode:null, tickDecimals:0}], yaxes:[{tickFormatter: bGFormatter},{tickFormatter: null, position: "right"}]})));
-
-
-        });
+        // Carbs vs bolus ratio
         $.getJSON("api/home/events/byDay?skipEventsList=true&" + window.location.search.replace("?",""), function (model) {
             var carbs=[];
             var bolus=[];
             for (var index = 0; index < model.length; index++) {
-                if (model[index].carbs > 50 && model[index].bolus > 5) {
-                    carbs.push([new Date(model[index].date), model[index].carbs]);
-                    bolus.push([new Date(model[index].date), model[index].bolus]);
+                var ratio = 1
+                if (model[index].carbs != 0) {
+                    ratio = model[index].bolus / (model[index].carbs / 10);
                 }
+                carbs.push([new Date(model[index].date), ratio]);
             }
             plots.push($.plot($("#ph3"),
-                   [ { data: carbs, label: "Daily carbs total" },
-                     { data: bolus, label: "Daily bolus total", yaxis: 2 }],
+                   [ { data: carbs, label: "Daily bolus U/10g carbs ratio" }],
                     $.extend(true, {}, flotOptions, {
                        xaxes: [ { mode: 'time' } ],
-                       yaxes: [ { tickFormatter: carbsFormatter },
-                                {tickFormatter: bolusFormatter, position: "right" } ],
+                       yaxes: [ { tickFormatter: carbRatioFormatter }],
                        legend: { position: 'se' }
                    })));
         });
