@@ -1,5 +1,7 @@
 package endafarrell.orla.service;
 
-/** TODO: Javadoc! */
+import org.codehaus.jackson.JsonNode;
+
 public interface OrlaObject {
+    public JsonNode toJson();
 }

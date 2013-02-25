@@ -6,6 +6,7 @@ import endafarrell.orla.OrlaException;
 import endafarrell.orla.monitoring.OrlaMonitor;
 import endafarrell.orla.service.config.OrlaConfig;
 import endafarrell.orla.service.data.BaseEvent;
+import endafarrell.orla.service.data.DailyStats;
 import endafarrell.orla.service.data.Event;
 import endafarrell.orla.service.data.Unit;
 import endafarrell.orla.service.data.persistence.Archiver;
@@ -109,6 +110,11 @@ public class OrlaImpl implements Orla {
 
     }
 
+
+    public List<Event> getEvents() {
+        return getEventsList(-1, true);
+    }
+
     public ProcessResults readSmartPix(Part part) {
         SmartpixProcessor processor = new SmartpixProcessor(this);
         processor.setInput(part);
@@ -170,57 +176,12 @@ public class OrlaImpl implements Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    public void writeAscentDecentByDayAsJson(OutputStream outputStream, int weeks) throws IOException {
+    public void writeDailyStatsAsJson(OutputStream outputStream, int weeks) throws IOException {
         List<Event> eventsList = getEventsList(weeks, true);
-        eventsList = Filter.only(eventsList, Unit.mmol_L);
-
-        Map<String, List<Double>> dayAscDescs = new HashMap<String, List<Double>>(eventsList.size());
-        long numDays = 0;
-        long numBGs = 0;
-        double totalBG = 0d;
-        for (Event event : eventsList) {
-            String date = DTF.PRETTY_yyyyMMdd.print(event.getStartTime());
-            if (!dayAscDescs.containsKey(date)) {
-                dayAscDescs.put(date, new ArrayList<Double>(10));
-                numDays++;
-            }
-            dayAscDescs.get(date).add(event.getValue().doubleValue());
-            numBGs++;
-            totalBG = event.getValue().doubleValue();
-        }
-        double bGsPerDay = (double) numBGs / (double) numDays;
-        double meanBG = totalBG / numBGs;
-
+        List<DailyStats> dailyStats = Reducer.dailyStats(eventsList);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-
-        Event previous = null;
-        double ascDesc = 0d;
-        for (Event event : eventsList) {
-            if (previous == null) {
-
-                ascDesc = Math.abs(event.getValue().doubleValue() - meanBG);
-
-            } else {
-                if (event.sameDayAs(previous)) {
-                    ascDesc += Math.abs(event.getValue().doubleValue() - previous.getValue().doubleValue());
-                } else {
-                    ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
-                    arrayNode.add(dayNode);
-                    dayNode.put("date", DTF.PRETTY_yyyyMMdd.print(previous.getStartTime()));
-                    dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(DTF.PRETTY_yyyyMMdd.print(previous.getStartTime())).size() / bGsPerDay, 1));
-
-                    // Start over
-                    ascDesc = Math.abs(event.getValue().doubleValue() - previous.getValue().doubleValue());
-                }
-            }
-            previous = event;
-        }
-        if (previous != null) {
-            // And now for the last day
-            ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
-            arrayNode.add(dayNode);
-            dayNode.put("date", DTF.PRETTY_yyyyMMdd.print(previous.getStartTime()));
-            dayNode.put("ascDesc", Convert.round(ascDesc * dayAscDescs.get(DTF.PRETTY_yyyyMMdd.print(previous.getStartTime())).size() / bGsPerDay, 1));
+        for (DailyStats dailyStat : dailyStats) {
+            arrayNode.add(dailyStat.toJson());
         }
         outputStream.write(arrayNode.toString().getBytes());
     }
@@ -265,8 +226,8 @@ public class OrlaImpl implements Orla {
                 arrayNode.add(dayNode);
                 dayEvents = JsonNodeFactory.instance.arrayNode();
                 if (addEvents) dayNode.put("events", dayEvents);
-                dayNode.put("day", DTF.PRETTY_DAY_EEE.print(event.getStartTime()));
-                dayNode.put("date", DTF.PRETTY_yyyyMMdd.print(event.getStartTime()));
+                dayNode.put("day", OrlaDateTimeFormat.PRETTY_DAY_EEE.print(event.getStartTime()));
+                dayNode.put("date", OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(event.getStartTime()));
                 if (BaseEvent.BOLUS_PLUS_BASAL.equals(event.getText())) {
                     dayNode.put(BaseEvent.BOLUS_PLUS_BASAL, Convert.round(event.getValue().doubleValue(), 2));
                 } else {

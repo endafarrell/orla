@@ -2,12 +2,10 @@ package endafarrell.orla.service.config;
 
 
 import endafarrell.orla.api.home.SmartPixUploadServlet;
-import endafarrell.orla.service.DTF;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

@@ -1,6 +1,7 @@
 package endafarrell.orla.service.data;
 
-import endafarrell.orla.service.DTF;
+import endafarrell.orla.service.OrlaDateTimeFormat;
+import endafarrell.orla.service.OrlaObject;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
@@ -14,7 +15,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-public abstract class BaseEvent implements Event {
+public abstract class BaseEvent implements Event, OrlaObject {
 
     public static final String BOLUS = "bolus";
     public static final String BOLUS_PLUS_BASAL = "Bolus_plus_Basal";
@@ -115,7 +116,7 @@ public abstract class BaseEvent implements Event {
                 thisFieldClass = thisField.getType();
                 if (thisFieldClass.equals(DateTime.class)) {
                     if (thisFieldValue != null) {
-                        json.put(fieldName, DTF.JSON_yyyyMMddHHmmssSSSZ.print((DateTime) thisFieldValue));
+                        json.put(fieldName, OrlaDateTimeFormat.JSON_yyyyMMddHHmmssSSSZ.print((DateTime) thisFieldValue));
                     }
                 } else if (thisFieldClass.equals(Number.class) && thisFieldValue != null) {
                     if (thisFieldValue instanceof Integer) {
@@ -126,10 +127,10 @@ public abstract class BaseEvent implements Event {
                 } else {
                     json.put(fieldName, String.valueOf(thisFieldValue));
                 }
-                json.put("day", DTF.PRETTY_DAY_EEE.print(startTime));
-                json.put("hhmm", DTF.PRETTY_HHmm.print(startTime));
+                json.put("day", OrlaDateTimeFormat.PRETTY_DAY_EEE.print(startTime));
+                json.put("hhmm", OrlaDateTimeFormat.PRETTY_HHmm.print(startTime));
                 json.put("time_pct", getTimeOfDayPercent());
-                json.put("class", this.getClass().getSimpleName());
+                json.put("clazz", this.getClass().getSimpleName());
 
             } catch (Exception reflection) {
                 json.put(fieldName, reflection.getClass().getSimpleName());
@@ -228,7 +229,7 @@ public abstract class BaseEvent implements Event {
         }
         DateTime startTime;
         try {
-            startTime = DTF.JSON_yyyyMMddHHmmssSSSZ.parseDateTime(node.get(Event.STARTTIME).getTextValue());
+            startTime = OrlaDateTimeFormat.JSON_yyyyMMddHHmmssSSSZ.parseDateTime(node.get(Event.STARTTIME).getTextValue());
         } catch (IllegalArgumentException e) {
             System.err.println("Bad startTime in " + node.toString());
             throw e;

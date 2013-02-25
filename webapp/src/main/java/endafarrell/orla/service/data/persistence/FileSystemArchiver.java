@@ -1,6 +1,6 @@
 package endafarrell.orla.service.data.persistence;
 
-import endafarrell.orla.service.DTF;
+import endafarrell.orla.service.OrlaDateTimeFormat;
 import endafarrell.orla.service.data.Event;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.NotImplementedException;
@@ -49,7 +49,7 @@ public class FileSystemArchiver extends Archiver {
     String archiveFilename(String partFilename) {
 
         return config.getFileArchiveLocation() + "/" +
-                DTF.ARCHIVER_yyyyMMddTHHmmss.print(DateTime.now()) +
+                OrlaDateTimeFormat.ARCHIVER_yyyyMMddTHHmmss.print(DateTime.now()) +
                 "-" + partFilename;
     }
 }

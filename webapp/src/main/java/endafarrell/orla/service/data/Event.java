@@ -1,6 +1,5 @@
 package endafarrell.orla.service.data;
 
-
 import org.codehaus.jackson.node.ObjectNode;
 import org.joda.time.DateTime;
 

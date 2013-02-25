@@ -3,6 +3,10 @@ package endafarrell.orla.service;
 import java.util.List;
 
 public class Convert {
+    public static double round(final double value) {
+        return round(value,1);
+    }
+
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
 
@@ -12,7 +16,7 @@ public class Convert {
         return (double) tmp / factor;
     }
 
-    public static double[] toPrimitiveDoubleArray(List<Double> source) {
+    public static double[] todoubleArray(List<Double> source) {
         double[] doubles = new double[source.size()];
         int index = 0;
         for (Double d : source) {
@@ -20,4 +24,5 @@ public class Convert {
         }
         return doubles;
     }
+
 }

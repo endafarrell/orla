@@ -1,0 +1,162 @@
+/* html5doctor.com Reset v1.6.1 (http://html5doctor.com/html-5-reset-stylesheet/) - http://cssreset.com */
+html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,
+samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,
+article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video {
+    border:0;
+    outline:0;
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
+    margin:0;
+    padding:0;
+}
+
+body {
+    font-size:10pt;
+    line-height:1;
+    font-family:Menlo, Verdana, sans-serif;
+    font-size-adjust:0.58;
+    xposition:relative;
+    width:100%;
+}
+
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section {
+    display:block;
+}
+
+nav {
+    background-color:#ccc;
+    position:fixed;
+    top:0;
+    width:100%;
+    z-index:1;
+    margin:0 auto 1em;
+    padding:0 2px 3px 3px;
+}
+
+nav ul {
+    list-style:none;
+}
+
+nav ul,nav ul li {
+    display:inline;
+}
+
+blockquote,q {
+    quotes:none;
+}
+
+blockquote:before,blockquote:after,q:before,q:after {
+    content:none;
+}
+
+a {
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
+    margin:0;
+    padding:0;
+}
+
+ins {
+    background-color:#ff9;
+    color:#000;
+    text-decoration:none;
+}
+
+mark {
+    background-color:#ff9;
+    color:#000;
+    font-style:italic;
+    font-weight:700;
+}
+
+del {
+    text-decoration:line-through;
+}
+
+abbr[title],dfn[title] {
+    border-bottom:1px dotted;
+    cursor:help;
+}
+
+table {
+    border-collapse:collapse;
+    border-spacing:0;
+}
+
+hr {
+    display:block;
+    height:1px;
+    border:0;
+    border-top:1px solid #ccc;
+    margin:1em 0;
+    padding:0;
+}
+
+input,select {
+    vertical-align:middle;
+}
+
+section {
+    margin-top:5em;
+}
+
+tr.day {
+    border-top:1px silver solid;
+    width:100%;
+}
+
+td.day {
+    width:14em;
+}
+
+td.Mon,td.Tue,td.Wed,td.Thu,td.Fri {
+    border-right:1px silver solid;
+}
+
+td.Sat,td.Sun {
+    border-right:8px #32cd32 solid;
+}
+
+td,span.time {
+    padding:0 .5em;
+}
+
+tr.day td {
+    padding-bottom:1em;
+}
+
+.red {
+    background-color:red;
+}
+
+.orange {
+    background-color:orange;
+}
+
+span.none:before {
+    display:block;
+    content:'\201C';
+    font-size:120%;
+}
+
+span.none:after {
+    display:block;
+    content:'\201D';
+    font-size:120%;
+}
+
+.mmol_L:before {
+    content:url(../img/drop.png);
+    padding-right:5px;
+}
+
+.time {
+    font-size:80%;
+    color:silver;
+}
+
+td.dayDetails {
+    position:relative;
+}

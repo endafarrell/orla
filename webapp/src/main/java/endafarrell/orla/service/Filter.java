@@ -41,11 +41,11 @@ public final class Filter {
 
         // Get the lower-th percentile
         Percentile percentile = new Percentile(lower);
-        percentile.setData(Convert.toPrimitiveDoubleArray(values));
+        percentile.setData(Convert.todoubleArray(values));
         double lowerPercentile = percentile.evaluate();
         // Get the higher-th percentile
         percentile = new Percentile(higher);
-        percentile.setData(Convert.toPrimitiveDoubleArray(values));
+        percentile.setData(Convert.todoubleArray(values));
         double higherPercentile = percentile.evaluate();
 
         // Now return the glucose readings between these percentiles

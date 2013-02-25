@@ -13,13 +13,7 @@ public class GlucoseReadingsServlet extends OrlaHttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        int weeks = 4;
-        try {
-            weeks = Integer.valueOf(req.getParameter("w"));
-        } catch (Exception ignored) {
-        }
-
         res.setContentType("application/json");
-        orla.writeGlucoseReadings(res.getOutputStream(), weeks);
+        orla.writeGlucoseReadings(res.getOutputStream(), weeks(req));
     }
 }
