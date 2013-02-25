@@ -3,7 +3,7 @@ package endafarrell.orla.service;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-public final class DTF {
+public final class OrlaDateTimeFormat {
 
     /**
      * A DateTimeFormat for the pattern "yyyyMMdd'T'HHmmss" which is suitable for archiving on disk.
@@ -15,7 +15,7 @@ public final class DTF {
     public static final DateTimeFormatter PRETTY_HHmm = DateTimeFormat.forPattern("HH:mm");
 
 
-//    DTF() {
+//    OrlaDateTimeFormat() {
 //        // Note that the ARCHIVER_yyyyMMddTHHmmss is NOT set to UTC to help the filename to stay as expected
 //        PRETTY_yyyyMMdd.withZoneUTC();
 //        JSON_yyyyMMddHHmmssSSSZ.withZoneUTC();

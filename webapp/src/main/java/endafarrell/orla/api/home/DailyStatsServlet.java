@@ -9,16 +9,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @WebServlet(urlPatterns = {"/api/home/ascentDescent"})
-public class AscentDescentServlet extends OrlaHttpServlet {
+public class DailyStatsServlet extends OrlaHttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        int weeks = -1;
-        try {
-            weeks = Integer.valueOf(req.getParameter("w"));
-        } catch (Exception ignored) {
-        }
         res.setContentType("application/json");
-        orla.writeAscentDecentByDayAsJson(res.getOutputStream(), weeks);
+        orla.writeDailyStatsAsJson(res.getOutputStream(), weeks(req));
     }
 }
