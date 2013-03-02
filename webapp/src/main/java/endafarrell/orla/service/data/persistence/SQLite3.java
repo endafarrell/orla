@@ -53,7 +53,7 @@ public class SQLite3 extends Database {
             prep.execute();
 
             for (ObjectNode objectNode : jsonList) {
-                String clazzName = objectNode.get("class").getTextValue();
+                String clazzName = objectNode.get("clazz").getTextValue();
                 prep = connection.prepareStatement("INSERT OR REPLACE INTO ekv(kvkey, clazz, kvvalue) VALUES (?,?,?);");
                 prep.setString(1, Database.kvKeyGenerator(objectNode));
                 prep.setString(2, clazzName);
