@@ -108,12 +108,14 @@ tr.day {
 }
 
 td.day {
+    border-right:8px silver solid;
+    padding-top: 8px;
     width:14em;
 }
 
-td.Mon,td.Tue,td.Wed,td.Thu,td.Fri {
-    border-right:1px silver solid;
-}
+/*td.Mon,td.Tue,td.Wed,td.Thu,td.Fri {*/
+    /*border-right:8px silver solid;*/
+/*}*/
 
 td.Sat,td.Sun {
     border-right:8px #32cd32 solid;
@@ -134,20 +136,16 @@ tr.day td {
 .orange {
     background-color:orange;
 }
-
-span.none:before {
-    display:block;
+.tweet:before {
     content:'\201C';
     font-size:120%;
 }
-
-span.none:after {
-    display:block;
+.tweet:after {
     content:'\201D';
     font-size:120%;
 }
 
-.mmol_L:before {
+.bG:before, .meanBG:before {
     content:url(../img/drop.png);
     padding-right:5px;
 }
@@ -155,8 +153,16 @@ span.none:after {
 .time {
     font-size:80%;
     color:silver;
+    border-left: 1px red solid;
 }
 
 td.dayDetails {
     position:relative;
+    width: 1000px;
+    background-image: url("../img/200_1.png");
+    background-repeat: repeat;
+}
+
+.calendar {
+    padding-bottom: 12px;
 }

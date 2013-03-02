@@ -2,20 +2,14 @@
 <html>
 <head>
     <title>Orla - diabetes diary</title>
-    <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
-    <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
-    <script type="text/javascript" src="js/jquery.flot.js"></script>
-    <script type="text/javascript" src="js/orla.js"></script>
-    <link  rel="stylesheet" type="text/css" href="css/orla.css">
+    <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery.flot.js"></script>
+    <script type="text/javascript" src="<%=application.getContextPath()%>/js/orla.js"></script>
+    <link  rel="stylesheet" type="text/css" href="<%=application.getContextPath()%>/css/orla.css">
 </head>
 <body>
-<nav>&laquo;
-    <ul>
-        <li><a rel="home" href="index.jsp">home</a></li>
-        <li>&crarr;</li>
-        <li><a href="api/home/glucose?w=4&l=25&h=75">glucose readings</a></li>
-    </ul>
-    &raquo;</nav>
+<%@include file="nav.jsp" %>
 <section>
     <div class="graph">
         <h3>Glucose readings</h3>
@@ -42,7 +36,7 @@
 
         // Glucose readings
         var previousPoint = null;
-        $.getJSON("api/home/glucose" + window.location.search, function (model) {
+        $.getJSON("<%=application.getContextPath()%>/api/home/glucose" + window.location.search, function (model) {
             var bGs = [];
             for (var index = 0; index < model.length; index++) {
                 bGs.push([new Date(model[index].startTime), model[index].value]);
@@ -50,7 +44,7 @@
             plots.push($.plot($("#ph0"), [bGs], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
         });
 
-        $.getJSON("api/home/dailyStats" + window.location.search, function (model) {
+        $.getJSON("<%=application.getContextPath()%>/api/home/dailyStats" + window.location.search, function (model) {
             var ads = [];
             var mbgs = [];
             for (var index = 0; index < model.length; index++) {
@@ -68,15 +62,12 @@
                 plots[index].getPlaceholder().bind("plothover", function (event, pos, item) {
                     $("#x").text(pos.x.toFixed(2));
                     $("#y").text(pos.y.toFixed(2));
-
                     if (item) {
                         if (previousPoint != item.dataIndex) {
                             previousPoint = item.dataIndex;
-
                             $("#tooltip").remove();
                             var x = item.datapoint[0],
                                 y = item.datapoint[1];
-
                             var content = "";
                             if (item.series.xaxis.options.mode == "time") {
                                 content = item.series.label + " on " + ((new Date(x)).toUTCString().replace(" 00:00:00 GMT","").replace(":00 GMT",""))
@@ -90,7 +81,6 @@
                         $("#tooltip").remove();
                         previousPoint = null;
                     }
-
                 });
             }
         }, 1000);

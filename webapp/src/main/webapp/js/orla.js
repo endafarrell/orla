@@ -12,6 +12,18 @@
     })(window.location.search.substr(1).split('&'))
 })(jQuery);
 
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) {
+      return typeof args[number] != 'undefined'
+        ? args[number]
+        : match
+      ;
+    });
+  };
+};
+
 var flotOptions = {
     xaxis:{ mode:"time" },
     grid:{ hoverable:true, clickable:true, markings: nightAndWeekendAreas },
@@ -118,4 +130,80 @@ function nightAndWeekendAreas(axes) {
         i += 7 * 24 * 60 * 60 * 1000;
     } while (i < axes.xaxis.max);
     return markings;
-}
+};
+
+function drawCalendar(date, container) {
+    console.log("Drawing calendar for " +date);
+     var htmlContent ="";
+     var FebNumberOfDays ="";
+     var counter = 1;
+
+     var dateNow = new Date(date);
+     var month = dateNow.getMonth();
+
+     var nextMonth = month + 1; //+1; //Used to match up the current month with the correct start date.
+     var prevMonth = month - 1;
+     var day = dateNow.getDate();
+     var year = dateNow.getFullYear();
+
+     if ( new Date( year, 1, 29 ).getMonth() === 1 ){
+          FebNumberOfDays = 29;
+     }else{
+          FebNumberOfDays = 28;
+     }
+
+     // names of months and week days.
+     var monthNames = ["January","February","March","April","May","June","July","August","September","October","November", "December"];
+     //var dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thrusday","Friday", "Saturday"];
+     var dayPerMonth = ["31", ""+FebNumberOfDays+"","31","30","31","30","31","31","30","31","30","31"]
+
+
+     // days in previous month and next one , and day of week.
+     var nextDate = new Date(nextMonth +' 1 ,'+year);
+     var weekdays= nextDate.getDay();
+     var weekdays2 = weekdays;
+     var numOfDays = dayPerMonth[month];
+
+     // this leave a white space for days of pervious month.
+     while (weekdays > 0){
+        htmlContent += "<td class='monthPre'></td>";
+        // used in next loop.
+         weekdays--;
+     }
+
+     // loop to build the calender body.
+     while (counter <= numOfDays){
+         var ymd = new Date(year, month,counter);
+         var calId = "cal" + ymd.getFullYear() + "-";
+         if (ymd.getMonth() < 9) calId += "0";
+         calId += (ymd.getMonth() + 1) + "-";
+         if (ymd.getDate() < 10) calId += "0";
+         calId += ymd.getDate();
+         // When to start new line.
+        if (weekdays2 > 6){
+            weekdays2 = 0;
+            htmlContent += "</tr><tr>";
+        }
+        // if counter is current day.
+        // highlight current day using the CSS defined in header.
+        if (counter == day){
+            htmlContent +="<td class='dayNow' id='"+ calId+"'>"+counter+"</td>";
+        } else {
+            htmlContent +="<td class='monthNow' id='"+calId+"'>"+counter+"</td>";
+        }
+        weekdays2++;
+        counter++;
+     }
+     // building the calendar html body.
+     var calendarBody = "<table class='calendar'> <tr class='monthNow'><th colspan='7'>" + monthNames[month]+" "+ year +"</th></tr>";
+     calendarBody +="<tr class='dayNames'>  <td>Sun</td>  <td>Mon</td> <td>Tue</td>"+
+     "<td>Wed</td> <td>Thu</td> <td>Fri</td> <td>Sat</td> </tr>";
+     calendarBody += "<tr>";
+     calendarBody += htmlContent;
+     calendarBody += "</tr></table>";
+     container.append($(calendarBody));
+};
+
+function dailyInfo(meanBG, ascDesc, numReadings) {
+    return "<span class='meanBG'>"+meanBG+"</span>"; //<br/>&dagger;: " + ascDesc + ", #: " + numReadings;
+};
