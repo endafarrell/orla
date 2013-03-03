@@ -1,13 +1,10 @@
 package endafarrell.orla.service;
 
 import javax.servlet.http.Part;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Collection;
 
-/** TODO: Javadoc! */
+
 public class FilePart implements Part {
     final File file;
 
@@ -15,7 +12,7 @@ public class FilePart implements Part {
         this.file = new File(pathname);
     }
 
-    public InputStream getInputStream() throws IOException {
+    public InputStream getInputStream() throws FileNotFoundException {
         return new FileInputStream(this.file);
     }
 
@@ -31,9 +28,7 @@ public class FilePart implements Part {
         return this.file.length();
     }
 
-    public void write(String fileName) throws IOException {
-        return;
-    }
+    public void write(String fileName) throws IOException { }
 
     public void delete() throws IOException {
         this.file.delete();

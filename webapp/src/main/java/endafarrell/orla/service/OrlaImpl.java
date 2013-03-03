@@ -1,14 +1,13 @@
 package endafarrell.orla.service;
 
+import apple.laf.JRSUIConstants;
 import com.ctc.wstx.sax.WstxSAXParserFactory;
+import com.google.common.collect.Sets;
 import endafarrell.healthgraph4j.*;
 import endafarrell.orla.OrlaException;
 import endafarrell.orla.monitoring.OrlaMonitor;
 import endafarrell.orla.service.config.OrlaConfig;
-import endafarrell.orla.service.data.BaseEvent;
-import endafarrell.orla.service.data.DailyStats;
-import endafarrell.orla.service.data.Event;
-import endafarrell.orla.service.data.Unit;
+import endafarrell.orla.service.data.*;
 import endafarrell.orla.service.data.persistence.Archiver;
 import endafarrell.orla.service.data.persistence.Database;
 import endafarrell.orla.service.data.persistence.FileSystemArchiver;
@@ -262,13 +261,30 @@ public class OrlaImpl implements Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    public void writeGlucoseReadings(ServletOutputStream outputStream, int weeks, int lower, int higher) throws IOException {
-        List<Event> eventsList = getEventsList(weeks, false);
-        eventsList = Filter.only(eventsList, Unit.mmol_L);
-        eventsList = Filter.percentiles(eventsList, lower, higher);
+    public void writeGlucoseReadings(OutputStream outputStream, int weeks, boolean overlay) throws IOException {
+        Set<String> requiredFields = Sets.newHashSet(Event.STARTTIME, "value");
+        List<Event> eventsList = getEventsList(weeks, true);
+        List<BloodGlucoseEvent> bGsList = Filter.only(eventsList, BloodGlucoseEvent.class);
+        bGsList = Reducer.insertMidnights(bGsList);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-        for (Event event : eventsList) {
-            arrayNode.add(event.toJson());
+        ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
+        arrayNode.add(dayNode);
+        ArrayNode events = JsonNodeFactory.instance.arrayNode();
+        dayNode.put("bGs", events);
+        BloodGlucoseEvent previous = bGsList.remove(0);
+        for (BloodGlucoseEvent current : bGsList) {
+            if (current.sameDayAs(previous)) {
+                events.add(current.toJson(requiredFields));
+            } else {
+                // We _ALSO_ put this new (midnight) in the previous
+                events.add(current.toJson(requiredFields));
+                dayNode = JsonNodeFactory.instance.objectNode();
+                arrayNode.add(dayNode);
+                events = JsonNodeFactory.instance.arrayNode();
+                dayNode.put("bGs", events);
+                events.add(current.toJson(requiredFields));
+            }
+            previous = current;
         }
         outputStream.write(arrayNode.toString().getBytes());
     }

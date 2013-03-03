@@ -11,9 +11,6 @@ import javax.servlet.http.Part;
 
 import java.util.List;
 
-import static org.testng.Assert.assertEquals;
-
-/** TODO: Javadoc! */
 public class ReducerTest {
     @BeforeMethod
     public void setUp() throws Exception {

@@ -1,6 +1,5 @@
 package endafarrell.orla;
 
-import javax.servlet.ServletOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -13,4 +12,5 @@ public interface OrlaJsonWriter {
 
     void writeGlucoseReadings(OutputStream outputStream, int weeks) throws IOException;
 
+    void writeGlucoseReadings(OutputStream outputStream, int weeks, boolean overlay) throws IOException;
 }

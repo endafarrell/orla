@@ -3,11 +3,14 @@ package endafarrell.orla.service.data;
 import org.codehaus.jackson.node.ObjectNode;
 import org.joda.time.DateTime;
 
+import java.util.Set;
+
 public interface Event extends Comparable<Event> {
     String STARTTIME = "startTime";
 
     DateTime getStartTime();
     ObjectNode toJson();
+    ObjectNode toJson(Set<String> topLevelFields);
 
     /**
      * True if the start time for this is in the same day as that.

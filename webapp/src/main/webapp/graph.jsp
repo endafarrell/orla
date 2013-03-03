@@ -28,6 +28,11 @@
         readings here suggest stability.</p>
         <div id="pha" style="width: 90%; height: 300px"></div>
     </div>
+    <div class="graph">
+        <h3>Daily overlay</h3>
+        <p>Message</p>
+        <div id="pho" style="width: 90%; height: 300px"></div>
+    </div>
 </section>
 <footer>&laquo;footer&raquo;</footer>
 <script type="text/javascript">
@@ -54,6 +59,30 @@
             plots.push($.plot($("#pha"), [ads],
                     $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
             plots.push($.plot($("#phm"), [{ data: mbgs, label: "Time-weighted average bG" }],
+                    $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
+        });
+
+        $.getJSON("<%=application.getContextPath()%>/api/home/glucose-overlay" + window.location.search, function (model) {
+            console.log("Graphing {0} dates from {1} to {2}".format(model.length, model[0].bGs[0].startTime, model[model.length-1].bGs[0].startTime));
+            var overlays = [];
+            for (var day = 0; day < model.length; day++) {
+                // A new overlay
+                var bGs = [];
+                var dayBGs = model[day].bGs;
+                for (var readingId = 0; readingId < dayBGs.length; readingId++){
+                    var readingDate = dayBGs[readingId].startTime;
+                    var date = new Date();
+                    if (readingId == dayBGs.length-1 && day < model.length-1) {
+                        date.setDate(date.getDate()+1);
+                    }
+                    date.setHours(readingDate.substr(11,2));
+                    date.setMinutes(readingDate.substr(14,2));
+                    bGs.push([date, dayBGs[readingId].value, readingDate + "@"+readingId]);
+                }
+                overlays.push({data: bGs, label: day});
+
+            }
+            plots.push($.plot($("#pho"), overlays,
                     $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
         });
 

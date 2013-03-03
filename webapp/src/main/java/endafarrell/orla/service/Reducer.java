@@ -32,8 +32,8 @@ public class Reducer {
 
         // Now - reduce some numbers. These are what we want.
         int numReadings = 0;
-        ArrayList<Double> bgs = new ArrayList<Double>();
-        ArrayList<Double> areas = new ArrayList<Double>();
+        List<Double> bgs = new ArrayList<Double>();
+        List<Double> areas = new ArrayList<Double>();
         double ascDesc = 0;
 
         BloodGlucoseEvent previous = bloodGlucoses.remove(0);
@@ -75,7 +75,7 @@ public class Reducer {
         return poly / MILLIS_PER_DAY;
     }
 
-    static List<BloodGlucoseEvent> insertMidnights(final List<BloodGlucoseEvent> bloodGlucoses) {
+    public static List<BloodGlucoseEvent> insertMidnights(final List<BloodGlucoseEvent> bloodGlucoses) {
         BloodGlucoseEvent previous = bloodGlucoses.remove(0);
         List<BloodGlucoseEvent> bgsIncMidnight = new ArrayList<BloodGlucoseEvent>((int) (1.5 * bloodGlucoses.size()));
         bgsIncMidnight.add(previous);

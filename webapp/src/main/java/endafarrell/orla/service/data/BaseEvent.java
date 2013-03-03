@@ -14,6 +14,7 @@ import org.joda.time.DateTimeUtils;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Set;
 
 public abstract class BaseEvent implements Event, OrlaObject {
 
@@ -102,12 +103,19 @@ public abstract class BaseEvent implements Event, OrlaObject {
     }
 
     public ObjectNode toJson() {
+        return toJson(null);
+    }
+
+    public ObjectNode toJson(Set<String> topLevelFields) {
         ObjectNode json = JsonNodeFactory.instance.objectNode();
 
         Field[] fields = this.getClass().getFields();
         for (Field field : fields) {
             if (Modifier.isStatic(field.getModifiers())) continue;
             String fieldName = field.getName();
+
+            // If this field is not asked for, skip it
+            if (topLevelFields != null && !topLevelFields.contains(fieldName)) continue;
             Object thisFieldValue;
             Class thisFieldClass;
             try {
@@ -127,15 +135,18 @@ public abstract class BaseEvent implements Event, OrlaObject {
                 } else {
                     json.put(fieldName, String.valueOf(thisFieldValue));
                 }
-                json.put("day", OrlaDateTimeFormat.PRETTY_DAY_EEE.print(startTime));
-                json.put("hhmm", OrlaDateTimeFormat.PRETTY_HHmm.print(startTime));
-                json.put("time_pct", getTimeOfDayPercent());
-                json.put("clazz", this.getClass().getSimpleName());
-
             } catch (Exception reflection) {
                 json.put(fieldName, reflection.getClass().getSimpleName());
             }
         }
+        if (topLevelFields == null || topLevelFields.contains("day"))
+            json.put("day", OrlaDateTimeFormat.PRETTY_DAY_EEE.print(startTime));
+        if (topLevelFields == null || topLevelFields.contains("hhmm"))
+            json.put("hhmm", OrlaDateTimeFormat.PRETTY_HHmm.print(startTime));
+        if (topLevelFields == null || topLevelFields.contains("time_pct"))
+            json.put("time_pct", getTimeOfDayPercent());
+        if (topLevelFields == null || topLevelFields.contains("clazz"))
+            json.put("clazz", this.getClass().getSimpleName());
         return json;
     }
 
@@ -224,8 +235,8 @@ public abstract class BaseEvent implements Event, OrlaObject {
         }
         String id = null;
         JsonNode idNode = node.get("id");
-        if (idNode != null){
-            id= idNode.getTextValue();
+        if (idNode != null) {
+            id = idNode.getTextValue();
         }
         DateTime startTime;
         try {
@@ -290,5 +301,7 @@ public abstract class BaseEvent implements Event, OrlaObject {
         return null;
     }
 
-    public String toString() { return this.toJson().toString(); }
+    public String toString() {
+        return this.toJson().toString();
+    }
 }
