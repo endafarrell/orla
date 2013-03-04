@@ -1,6 +1,5 @@
 package endafarrell.orla.service;
 
-import apple.laf.JRSUIConstants;
 import com.ctc.wstx.sax.WstxSAXParserFactory;
 import com.google.common.collect.Sets;
 import endafarrell.healthgraph4j.*;
@@ -23,10 +22,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
-import org.joda.time.Weeks;
+import org.joda.time.DateTime;
 import org.xml.sax.SAXException;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Part;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -111,10 +109,12 @@ public class OrlaImpl implements Orla {
 
 
     public List<Event> getEvents() {
-        return getEventsList(-1, true);
+        System.out.println("»OrlaImpl.getEvents()");
+        return getEventsList(null, null, true);
     }
 
     public ProcessResults readSmartPix(Part part) {
+        System.out.println("»OrlaImpl.readSmartPix()");
         SmartpixProcessor processor = new SmartpixProcessor(this);
         processor.setInput(part);
         ProcessResults results = processor.process();
@@ -123,6 +123,7 @@ public class OrlaImpl implements Orla {
     }
 
     public ProcessResults readTwitterMessages() {
+        System.out.println("»OrlaImpl.readTwitterMessages()");
         TwitterProcessor processor = new TwitterProcessor(this);
         ProcessResults results = processor.process();
         events = database.loadFromDB();
@@ -130,6 +131,7 @@ public class OrlaImpl implements Orla {
     }
 
     public ProcessResults readHealthgraphFitnessActivities() {
+        System.out.println("»OrlaImpl.readHealthgraphFitnessActivities()");
         HealthGraphProcessor processor = new HealthGraphProcessor(this);
         ProcessResults results = processor.process();
         events = database.loadFromDB();
@@ -138,36 +140,29 @@ public class OrlaImpl implements Orla {
     }
 
     public HealthGraph getHealthGraphClient() {
+        System.out.println("»OrlaImpl.getHealthGraphClient()");
         return this.healthGraph;
     }
 
     public Database getDatabase() {
+        System.out.println("»OrlaImpl.getDatabase()");
         return this.database;
     }
 
     public Archiver getArchiver() {
+        System.out.println("»OrlaImpl.getArchiver()");
         return this.archiver;
     }
 
     public OrlaConfig getConfig() {
+        System.out.println("»OrlaImpl.getConfig()");
         return this.config;
     }
 
 
-    public void writeEventsAsJson(final OutputStream outputStream) throws IOException {
-        writeEventsAsJson(outputStream, -1);
-    }
-
-    /**
-     * Writes the events as a JSON array, possibly time limited.
-     *
-     * @param outputStream Where to write to
-     * @param weeks        The number of weeks, ending with the latest entries, of data to write. Values greater than zero
-     *                     will truncate
-     * @throws IOException
-     */
-    public void writeEventsAsJson(final OutputStream outputStream, int weeks) throws IOException {
-        List<Event> eventsList = getEventsList(weeks, false);
+    public void writeEventsAsJson(final OutputStream outputStream, DateTime from, DateTime to) throws IOException {
+        System.out.println("»OrlaImpl.writeEventsAsJson(outputStream,"+from+","+to+")");
+        List<Event> eventsList = getEventsList(from, to, false);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for (Event event : eventsList) {
             arrayNode.add(event.toJson());
@@ -175,8 +170,9 @@ public class OrlaImpl implements Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    public void writeDailyStatsAsJson(OutputStream outputStream, int weeks) throws IOException {
-        List<Event> eventsList = getEventsList(weeks, true);
+    public void writeDailyStatsAsJson(OutputStream outputStream, DateTime from, DateTime to) throws IOException {
+        System.out.println("»OrlaImpl.writeDailyStatsAsJson(outputStream,"+from+","+to+")");
+        List<Event> eventsList = getEventsList(from, to, true);
         List<DailyStats> dailyStats = Reducer.dailyStats(eventsList);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for (DailyStats dailyStat : dailyStats) {
@@ -185,18 +181,17 @@ public class OrlaImpl implements Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    public void writeEventsByDayAsJson(OutputStream outputStream, boolean omitEventsList, int weeks) throws IOException {
-        List<Event> eventsList = getEventsList(weeks, false);
+    public void writeEventsByDayAsJson(OutputStream outputStream, DateTime from, DateTime to) throws IOException {
+        System.out.println("»OrlaImpl.writeEventsByDayAsJson(outputStream,"+from+","+to+")");
+        List<Event> eventsList = getEventsList(from, to, false);
 
         if (eventsList == null) return;
-
-        boolean addEvents = !omitEventsList;
 
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
         arrayNode.add(dayNode);
         ArrayNode dayEvents = JsonNodeFactory.instance.arrayNode();
-        if (addEvents) dayNode.put("events", dayEvents);
+        dayNode.put("events", dayEvents);
 
         Integer carbs = 0;
         Double bolus = 0d;
@@ -207,7 +202,7 @@ public class OrlaImpl implements Orla {
                 if (BaseEvent.BOLUS_PLUS_BASAL.equals(event.getText())) {
                     dayNode.put(BaseEvent.BOLUS_PLUS_BASAL, Convert.round(event.getValue().doubleValue(), 2));
                 } else {
-                    if (addEvents) dayEvents.add(event.toJson());
+                    dayEvents.add(event.toJson());
                 }
                 if (event.getUnit() == Unit.g) {
                     carbs += event.getValue().intValue();
@@ -224,13 +219,13 @@ public class OrlaImpl implements Orla {
                 dayNode = JsonNodeFactory.instance.objectNode();
                 arrayNode.add(dayNode);
                 dayEvents = JsonNodeFactory.instance.arrayNode();
-                if (addEvents) dayNode.put("events", dayEvents);
+                dayNode.put("events", dayEvents);
                 dayNode.put("day", OrlaDateTimeFormat.PRETTY_DAY_EEE.print(event.getStartTime()));
                 dayNode.put("date", OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(event.getStartTime()));
                 if (BaseEvent.BOLUS_PLUS_BASAL.equals(event.getText())) {
                     dayNode.put(BaseEvent.BOLUS_PLUS_BASAL, Convert.round(event.getValue().doubleValue(), 2));
                 } else {
-                    if (addEvents) dayEvents.add(event.toJson());
+                    dayEvents.add(event.toJson());
                 }
                 carbs = 0;
                 bolus = 0d;
@@ -241,18 +236,19 @@ public class OrlaImpl implements Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    private List<Event> getEventsList(int weeks, boolean includePreceding) {
+    private List<Event> getEventsList(DateTime from, DateTime to, boolean includePreceding) {
         List<Event> eventsList = new ArrayList<Event>(events);
-        if (weeks > 0) {
-            eventsList = Filter.last(eventsList, Weeks.weeks(weeks), includePreceding);
+        if (from != null && to != null) {
+            eventsList = Filter.subList(eventsList, from, to, includePreceding);
         } else {
             Collections.sort(eventsList);
         }
         return eventsList;
     }
 
-    public void writeGlucoseReadings(OutputStream outputStream, int weeks) throws IOException {
-        List<Event> eventsList = getEventsList(weeks, false);
+    public void writeGlucoseReadings(OutputStream outputStream, DateTime from, DateTime to) throws IOException {
+        System.out.println("»OrlaImpl.writeGlucoseReadings(outputStream,"+from+","+to+")");
+        List<Event> eventsList = getEventsList(from, to, false);
         eventsList = Filter.only(eventsList, Unit.mmol_L);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
         for (Event event : eventsList) {
@@ -261,9 +257,10 @@ public class OrlaImpl implements Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
-    public void writeGlucoseReadings(OutputStream outputStream, int weeks, boolean overlay) throws IOException {
+    public void writeGlucoseOverlays(OutputStream outputStream, DateTime from, DateTime to) throws IOException {
+        System.out.println("»OrlaImpl.writeGlucoseOverlays(outputStream,"+from+","+to+")");
         Set<String> requiredFields = Sets.newHashSet(Event.STARTTIME, "value");
-        List<Event> eventsList = getEventsList(weeks, true);
+        List<Event> eventsList = getEventsList(from, to, true);
         List<BloodGlucoseEvent> bGsList = Filter.only(eventsList, BloodGlucoseEvent.class);
         bGsList = Reducer.insertMidnights(bGsList);
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
@@ -290,6 +287,7 @@ public class OrlaImpl implements Orla {
     }
 
     public String getHealthGraphAuthorisation() throws OrlaException {
+        System.out.println("»OrlaImpl.getHealthGraphAuthorisation()");
         try {
             return healthGraph.authenticate(HealthGraph.AuthorisationMethod.OAuthCallback);
         } catch (HealthGraphException e) {
@@ -298,6 +296,7 @@ public class OrlaImpl implements Orla {
     }
 
     public void authenticate(String authenticationCode) throws OrlaException {
+        System.out.println("»OrlaImpl.authenticate("+authenticationCode+")");
         try {
             healthGraph.authenticate(authenticationCode);
         } catch (HealthGraphException e) {

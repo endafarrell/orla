@@ -31,6 +31,30 @@ public final class Filter {
         return last;
     }
 
+    public static List<Event> subList(List<Event> events, DateTime from, DateTime to, boolean includePreceding) {
+        String today = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now());
+        if (events == null) return null;
+        if (events.size() == 0) return null;
+        Collections.sort(events);
+        ArrayList<Event> subList = new ArrayList<Event>(events.size());
+        DateTime end = to.plusDays(1);
+        Event preceding = null;
+        for (Event e : events) {
+            if (e.getStartTime().isAfter(from)) {
+               if (e.getStartTime().isBefore(end)) {
+                   subList.add(e);
+               }
+            } else {
+                preceding = e;
+            }
+        }
+        if (preceding != null && includePreceding) {
+            subList.add(0, preceding);
+        }
+        subList.trimToSize();
+        return subList;
+    }
+
 
     public static List<Event> percentiles(Collection<Event> events, int lower, int higher) {
         // Get the raw values
@@ -86,5 +110,4 @@ public final class Filter {
         eventList.trimToSize();
         return eventList;
     }
-
 }

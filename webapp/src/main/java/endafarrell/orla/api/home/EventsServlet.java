@@ -1,6 +1,8 @@
 package endafarrell.orla.api.home;
 
 import endafarrell.orla.api.OrlaHttpServlet;
+import org.apache.commons.lang3.tuple.Pair;
+import org.joda.time.DateTime;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,6 +16,7 @@ public class EventsServlet extends OrlaHttpServlet {
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         res.setContentType(OrlaHttpServlet.ContentType.JSON);
-        orla.writeEventsAsJson(res.getOutputStream(), weeks(req));
+        Pair<DateTime, DateTime> fromTo = fromTo(req);
+        orla.writeEventsAsJson(res.getOutputStream(), fromTo.getLeft(), fromTo.getRight());
     }
 }

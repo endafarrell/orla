@@ -24,7 +24,7 @@ public class OrlaImplTest {
     @Test(dependsOnMethods = {"testReadFile"})
     public void testWriteEventsAsJson() throws Exception {
         Orla orla = OrlaImpl.getInstance();
-        orla.writeEventsAsJson(System.out, OrlaHttpServlet.DEFAULT_NUM_WEEKS);
+        orla.writeEventsAsJson(System.out, null, null);
     }
 
 }

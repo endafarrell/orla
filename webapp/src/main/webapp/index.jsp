@@ -1,4 +1,7 @@
-<!DOCTYPE HTML>
+<%@ page import="org.joda.time.DateTime,endafarrell.orla.service.OrlaDateTimeFormat"%><%
+    String to = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now());
+    String from = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now().minusWeeks(12));
+%><!DOCTYPE HTML>
 <html>
 <head>
     <title>Orla - diabetes diary</title>
@@ -69,7 +72,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $("#eventsByDayListTmpl").template("thisEventsListTemplate");
-        $.getJSON("<%=application.getContextPath()%>/api/home/events/byDay?w=8", function (model) {
+        $.getJSON("<%=application.getContextPath()%>/api/home/events/byDay?from=<%=from%>;to=<%=to%>", function (model) {
             var data = {days:model};
             var newMarkup = $.tmpl("thisEventsListTemplate", data);
             newMarkup.appendTo("#events");

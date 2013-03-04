@@ -68,6 +68,8 @@
             for (var day = 0; day < model.length; day++) {
                 // A new overlay
                 var bGs = [];
+                //var labels = dayBGs[0].startTime.split(" ")[0];
+                var labels = [];
                 var dayBGs = model[day].bGs;
                 for (var readingId = 0; readingId < dayBGs.length; readingId++){
                     var readingDate = dayBGs[readingId].startTime;
@@ -77,13 +79,17 @@
                     }
                     date.setHours(readingDate.substr(11,2));
                     date.setMinutes(readingDate.substr(14,2));
-                    bGs.push([date, dayBGs[readingId].value, readingDate + "@"+readingId]);
+                    bGs.push([date, dayBGs[readingId].value]);
+                    labels.push(dayBGs[readingId].value + " at "
+                            + (new Date(readingDate.substr(0,10))).toString().substr(0,4) + readingDate.substr(0,16));
                 }
-                overlays.push({data: bGs, label: day});
+                overlays.push({data: bGs, label: labels});
 
             }
             plots.push($.plot($("#pho"), overlays,
-                    $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
+                    $.extend(true,{},
+                             flotOptions,
+                             {yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}], legend:{show: false}})));
         });
 
         setTimeout(function(){
@@ -98,7 +104,9 @@
                             var x = item.datapoint[0],
                                 y = item.datapoint[1];
                             var content = "";
-                            if (item.series.xaxis.options.mode == "time") {
+                            if (Object.prototype.toString.call(item.series.label) === "[object Array]") {
+                                content = item.series.label[item.dataIndex];
+                            } else if (item.series.xaxis.options.mode == "time") {
                                 content = item.series.label + " on " + ((new Date(x)).toUTCString().replace(" 00:00:00 GMT","").replace(":00 GMT",""))
                                         + " = " + item.series.yaxis.tickFormatter(y,item.series.yaxis);
                             } else {
