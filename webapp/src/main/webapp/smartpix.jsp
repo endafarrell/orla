@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Add SmartPix data</title>
-    <link rel="stylesheet" type="text/css" href="<%=application.getContextPath()%>/css/orla.css">
+    <link rel="stylesheet" type="text/css" media="all" href="<%=application.getContextPath()%>/css/orla.css">
 </head>
 <body>
 <%@include file="nav.jsp" %>

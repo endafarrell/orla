@@ -6,7 +6,11 @@
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery.tmpl.min.js"></script>
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery.flot.js"></script>
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/orla.js"></script>
-    <link  rel="stylesheet" type="text/css" href="<%=application.getContextPath()%>/css/orla.css">
+    <link  rel="stylesheet" type="text/css" media="all" href="<%=application.getContextPath()%>/css/orla.css">
+    <script type="text/javascript">
+        var plots = [];
+        var previousPoint = null;
+    </script>
 </head>
 <body>
 <%@include file="nav.jsp" %>
@@ -19,32 +23,28 @@
     <div class="graph">
         <h3>Mean bG</h3>
         <p>These are the time-weighted average glucose readings during the day.</p>
-        <div id="phm" style="width: 90%; height: 300px"></div>
+        <div id="phm" style="width: 85%; height: 300px"></div>
     </div>
     <div class="graph">
         <h3>Ascent/descent</h3>
         <p>These show how the bG readings have moved up/down in the day. Note though that days with lots of readings
         will have a higher figure here, days with few readings will have a lower figure here. None-the-less, lower
         readings here suggest stability.</p>
-        <div id="pha" style="width: 90%; height: 300px"></div>
+        <div id="pha" style="width: 85%; height: 300px"></div>
     </div>
     <div class="graph">
         <h3>Daily overlay</h3>
-        <p>Message</p>
-        <div id="pho" style="width: 90%; height: 300px"></div>
+        <p>Here are the daily readings overlaid for this time-frame.</p>
+        <div id="pho" style="width: 85%; height: 600px"></div>
     </div>
 </section>
 <footer>&laquo;footer&raquo;</footer>
 <script type="text/javascript">
     $(document).ready(function () {
-        var plots = [];
-
-        // Glucose readings
-        var previousPoint = null;
         $.getJSON("<%=application.getContextPath()%>/api/home/glucose" + window.location.search, function (model) {
             var bGs = [];
             for (var index = 0; index < model.length; index++) {
-                bGs.push([new Date(model[index].startTime), model[index].value]);
+                bGs.push([$.date(model[index].startTime).toDate(), model[index].value]);
             }
             plots.push($.plot($("#ph0"), [bGs], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
         });
@@ -53,8 +53,8 @@
             var ads = [];
             var mbgs = [];
             for (var index = 0; index < model.length; index++) {
-                ads.push([new Date(model[index].date), model[index].ascDesc]);
-                mbgs.push([new Date(model[index].date), model[index].meanBG]);
+                ads.push([new Date(model[index].date.replace(/-/g,"/")), model[index].ascDesc]);
+                mbgs.push([new Date(model[index].date.replace(/-/g,"/")), model[index].meanBG]);
             }
             plots.push($.plot($("#pha"), [ads],
                     $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
@@ -63,7 +63,6 @@
         });
 
         $.getJSON("<%=application.getContextPath()%>/api/home/glucose-overlay" + window.location.search, function (model) {
-            console.log("Graphing {0} dates from {1} to {2}".format(model.length, model[0].bGs[0].startTime, model[model.length-1].bGs[0].startTime));
             var overlays = [];
             for (var day = 0; day < model.length; day++) {
                 // A new overlay
@@ -81,19 +80,21 @@
                     date.setMinutes(readingDate.substr(14,2));
                     bGs.push([date, dayBGs[readingId].value]);
                     labels.push(dayBGs[readingId].value + " at "
-                            + (new Date(readingDate.substr(0,10))).toString().substr(0,4) + readingDate.substr(0,16));
+                            + (new Date(readingDate.substr(0,10).replace(/-/g,"/"))).toString().substr(0,4) + readingDate.substr(0,16));
                 }
                 overlays.push({data: bGs, label: labels});
 
             }
             plots.push($.plot($("#pho"), overlays,
                     $.extend(true,{},
-                             flotOptions,
-                             {yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}], legend:{show: false}})));
+                             flotOptions, {
+                                yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}],
+                                legend:{show: false}
+                            })));
         });
 
         setTimeout(function(){
-            for (var index in plots){
+            for (var index = 0; index < plots.length; index++){
                 plots[index].getPlaceholder().bind("plothover", function (event, pos, item) {
                     $("#x").text(pos.x.toFixed(2));
                     $("#y").text(pos.y.toFixed(2));

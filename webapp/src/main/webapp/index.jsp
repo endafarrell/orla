@@ -8,11 +8,11 @@
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery.tmpl.min.js"></script>
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/orla.js"></script>
-    <link  rel="stylesheet" type="text/css" href="<%=application.getContextPath()%>/css/orla.css">
+    <link  rel="stylesheet" type="text/css" media="all" href="<%=application.getContextPath()%>/css/orla.css">
 
     <script id="eventsByDayListTmpl" type="text/x-jquery-tmpl">
-        <table>
-            {{each days}}
+        <table class="day">
+            {{each days}}{{if events.length}}
             <tr class="day ${day}" id="events_${date}">
                 <td class="day ${day}">
                     <table>
@@ -39,7 +39,7 @@
                             <span class="tweet">${text}</span>
                         {{else (clazz=="PumpBasalEvent" || clazz=="PumpEvent") && value=="null"}}
                             <span class="time">${hhmm}</span>
-                            <span>Pump: ${text}</span>
+                            <span>Pump: ${text.replace(" null","")}</span>
                         {{else clazz=="PumpBolusEvent"}}
                             <span class="time">${hhmm}</span>
                             <span>${value}</span>
@@ -59,7 +59,7 @@
                     {{/each}}
                 </td>
             </tr>
-            {{/each}}
+            {{/if}}{{/each}}
         </table>
     </script>
 </head>
@@ -72,7 +72,10 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $("#eventsByDayListTmpl").template("thisEventsListTemplate");
-        $.getJSON("<%=application.getContextPath()%>/api/home/events/byDay?from=<%=from%>;to=<%=to%>", function (model) {
+        var fm = $.QueryString["from"] ? $.QueryString["from"] : "<%=from%>";
+        var  t = $.QueryString["to"]   ? $.QueryString["to"]   : "<%=to%>";
+
+        $.getJSON("<%=application.getContextPath()%>/api/home/events/byDay?from="+fm+"&to="+t, function (model) {
             var data = {days:model};
             var newMarkup = $.tmpl("thisEventsListTemplate", data);
             newMarkup.appendTo("#events");

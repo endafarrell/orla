@@ -103,9 +103,14 @@ section {
     padding-right: 20px;
 }
 
+table.day {
+    page-break-inside:auto
+}
 tr.day {
     border-top:1px silver solid;
     width:100%;
+    page-break-inside: avoid;
+    page-break-after:auto;
 }
 
 td.day {
@@ -168,6 +173,61 @@ td.dayDetails {
     padding-bottom: 12px;
 }
 
+.calBG {
+    width: 5em;
+    text-align: right;
+}
+.calDay {
+    width: 8em;
+}
+
+.calDate {
+    color: silver;
+    width: 2em;
+    font-size: 80%;
+    text-align: right;
+    float: left;
+}
+
 .graph h3 {
     padding-top: 18px;
 }
+
+
+@media print {
+    table {
+        page-break-inside: auto
+    }
+
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto
+    }
+
+    thead {
+        display: table-header-group
+    }
+
+    nav {
+        display: none;
+    }
+
+    footer {
+        display: none;
+    }
+
+    @page {
+        size: portrait;
+        /*margin-top: 10%;*/
+    }
+
+    @PageBreak {
+                page-break:always;
+                page-break-inside:avoid;
+            }
+
+    @bottom-right {
+                content: "Page #" counter(page) "of " counter(pages);
+            }
+}
+
