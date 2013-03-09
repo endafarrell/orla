@@ -45,7 +45,6 @@ public class DailyStats implements OrlaObject {
                 '}';
     }
 
-    @Override
     public JsonNode toJson() {
         return json;
     }

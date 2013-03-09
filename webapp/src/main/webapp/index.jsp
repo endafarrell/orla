@@ -24,7 +24,8 @@
                 <td class="dayDetails">
                     {{each events}}
                     <div style="padding-left:${8*time_pct}px;">
-                        {{if clazz=="PumpDailyDoseEvent" || (clazz=="PumpBasalEvent" && text == "null") }}
+                        {{if clazz=="PumpDailyDoseEvent" || clazz=="PumpBasalProfileConfig" ||
+                            (clazz=="PumpBasalEvent" && text == "null") }}
                             <!-- ${hhmm} ${clazz} ${source} ${text} ${value} ${unit} -->
                         {{else clazz=="CarbEvent"}}
                             <span class="time">${hhmm}</span>

@@ -8,15 +8,15 @@ import org.joda.time.DateTimeZone;
 import java.io.IOException;
 
 public class ProcessResults {
-    public final int payloadCount;
-    public final int countUntilOverlap;
-    public final int totalCountForClass;
+    public final int payload;
+    public final int overlap;
+    public final int these;
     public final DateTime createdAt;
 
-    public ProcessResults(int payloadCount, int countUntilOverlap, int totalCountForClass) {
-        this.payloadCount = payloadCount;
-        this.countUntilOverlap = countUntilOverlap;
-        this.totalCountForClass = totalCountForClass;
+    public ProcessResults(int payload, int overlap, int these) {
+        this.payload = payload;
+        this.overlap = overlap;
+        this.these = these;
         this.createdAt = DateTime.now(DateTimeZone.UTC);
     }
 
@@ -26,9 +26,9 @@ public class ProcessResults {
             return new ObjectMapper().writeValueAsString(this);
         } catch (IOException e) {
             return "ProcessResults{" +
-                    "payloadCount=" + payloadCount +
-                    ", countUntilOverlap=" + countUntilOverlap +
-                    ", totalCountForClass=" + totalCountForClass +
+                    "payload=" + payload +
+                    ", overlap=" + overlap +
+                    ", these=" + these +
                     ", createdAt=" + createdAt +
                     '}';
         }
@@ -41,18 +41,18 @@ public class ProcessResults {
 
         ProcessResults results = (ProcessResults) o;
 
-        if (countUntilOverlap != results.countUntilOverlap) return false;
-        if (payloadCount != results.payloadCount) return false;
-        if (totalCountForClass != results.totalCountForClass) return false;
+        if (overlap != results.overlap) return false;
+        if (payload != results.payload) return false;
+        if (these != results.these) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = payloadCount;
-        result = 31 * result + countUntilOverlap;
-        result = 31 * result + totalCountForClass;
+        int result = payload;
+        result = 31 * result + overlap;
+        result = 31 * result + these;
         return result;
     }
 }

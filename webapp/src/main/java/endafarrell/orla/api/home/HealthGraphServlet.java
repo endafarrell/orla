@@ -2,6 +2,7 @@ package endafarrell.orla.api.home;
 
 import endafarrell.orla.OrlaException;
 import endafarrell.orla.api.OrlaHttpServlet;
+import endafarrell.orla.service.processor.ProcessResults;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -24,8 +25,8 @@ public class HealthGraphServlet extends OrlaHttpServlet {
             String code = parameterMap.get("code")[0];
             try {
                 orla.authenticate(code);
-                orla.readHealthgraphFitnessActivities();
-                res.sendRedirect(req.getContextPath());
+                ProcessResults results = orla.readHealthgraphFitnessActivities();
+                res.sendRedirect(req.getContextPath() + "?provider=HealthGraph&results=" + results);
             } catch (OrlaException e) {
                 throw new ServletException(e);
             }

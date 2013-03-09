@@ -1,4 +1,4 @@
-package endafarrell.orla.service.config;
+package endafarrell.orla.service;
 
 
 import endafarrell.orla.api.home.SmartPixUploadServlet;
@@ -16,10 +16,10 @@ public class OrlaConfig {
     static String PROPERTIES_LOCATION = "/var/data/endafarrell/orla/config/orla.properties";
     public final String databaseConnection;
     public final String fileArchiveLocation;
-    public final  String twitterOAuthConsumerKey;
-    public final  String twitterOAuthAccessTokenSecret;
-    public final  String twitterOAuthConsumerSecret;
-    public final  String twitterOAuthAccessToken;
+    public final String twitterOAuthConsumerKey;
+    public final String twitterOAuthAccessTokenSecret;
+    public final String twitterOAuthConsumerSecret;
+    public final String twitterOAuthAccessToken;
 
     public synchronized static OrlaConfig getInstance() {
         if (OrlaConfig.INSTANCE == null) {
@@ -37,14 +37,14 @@ public class OrlaConfig {
                         "entry for database.connection");
             }
 
-            this.fileArchiveLocation = config.getString("smartpix.fileUploadLocation");
+            this.fileArchiveLocation = config.getString("archive.fileUploadLocation");
             if (this.fileArchiveLocation == null) {
                 throw new IllegalStateException("The " + PROPERTIES_LOCATION + " properties files does not have an " +
-                        "entry for smartpix.fileUploadLocation");
+                        "entry for archive.fileUploadLocation");
             }
             if (!SmartPixUploadServlet.FILE_UPLOAD_LOCATION.equals(this.fileArchiveLocation)) {
                 throw new IllegalStateException("The " + PROPERTIES_LOCATION + " properties file entry for  " +
-                        "smartpix.fileUploadLocation (" + this.fileArchiveLocation + ") /must/ match that of " +
+                        "archive.fileUploadLocation (" + this.fileArchiveLocation + ") /must/ match that of " +
                         "SmartPixUploadServlet.FILE_UPLOAD_LOCATION (" + SmartPixUploadServlet.FILE_UPLOAD_LOCATION +
                         ") due to the way \"@interface MultipartConfig\" works.");
             }

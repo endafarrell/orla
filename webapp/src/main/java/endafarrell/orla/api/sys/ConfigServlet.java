@@ -1,7 +1,7 @@
 package endafarrell.orla.api.sys;
 
 import endafarrell.orla.api.OrlaHttpServlet;
-import endafarrell.orla.service.config.OrlaConfig;
+import endafarrell.orla.service.OrlaConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
@@ -45,7 +45,7 @@ public class ConfigServlet extends OrlaHttpServlet {
 
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode configJson = JsonNodeFactory.instance.objectNode();
-        configJson.put("orlaConfig", mapper.convertValue(OrlaConfig.getInstance(), ObjectNode.class));// .writeValueAsString(OrlaConfig.getInstance()) );
+        configJson.put("orlaConfig", mapper.convertValue(OrlaConfig.getInstance(), ObjectNode.class));
         ObjectNode servletContext = JsonNodeFactory.instance.objectNode();
         servletContext.put("servletRegistrations", registrations);
         configJson.put("servletContext", servletContext);

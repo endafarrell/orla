@@ -1,7 +1,9 @@
 package endafarrell.orla.service.data.persistence;
 
+import endafarrell.orla.service.OrlaConfig;
 import endafarrell.orla.service.OrlaDateTimeFormat;
 import endafarrell.orla.service.data.Event;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.codehaus.jackson.node.ObjectNode;
@@ -46,10 +48,14 @@ public class FileSystemArchiver extends Archiver {
         throw new NotImplementedException();
     }
 
-    String archiveFilename(String partFilename) {
+    String archiveFilename(String partFilename) throws IOException {
+        String archiveRoot = OrlaConfig.getInstance().fileArchiveLocation;
+        File archiveFileDir = new File(archiveRoot + "/" + partFilename);
+        if (!archiveFileDir.exists()) {
+            FileUtils.forceMkdir(archiveFileDir);
+        }
+        return archiveFileDir.getAbsolutePath() + "/"
+                        + OrlaDateTimeFormat.ARCHIVER_yyyyMMddTHHmmss.print(DateTime.now());
 
-        return config.getFileArchiveLocation() + "/" +
-                OrlaDateTimeFormat.ARCHIVER_yyyyMMddTHHmmss.print(DateTime.now()) +
-                "-" + partFilename;
     }
 }

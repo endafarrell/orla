@@ -1,6 +1,6 @@
 package endafarrell.orla.service.data.persistence;
 
-import endafarrell.orla.service.config.OrlaConfig;
+import endafarrell.orla.service.OrlaConfig;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.codehaus.jackson.node.ObjectNode;
 

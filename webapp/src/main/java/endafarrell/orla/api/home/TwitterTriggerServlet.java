@@ -1,6 +1,8 @@
 package endafarrell.orla.api.home;
 
 import endafarrell.orla.api.OrlaHttpServlet;
+import endafarrell.orla.service.processor.ProcessResults;
+import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -13,7 +15,7 @@ public class TwitterTriggerServlet extends OrlaHttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        orla.readTwitterMessages();
-        res.sendRedirect(req.getContextPath());
+        ProcessResults results = orla.readTwitterMessages();
+        res.sendRedirect(req.getContextPath()  + "?provider=twitter&results=" + results);
     }
 }

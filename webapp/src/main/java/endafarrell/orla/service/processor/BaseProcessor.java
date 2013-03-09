@@ -1,7 +1,7 @@
 package endafarrell.orla.service.processor;
 
 import endafarrell.orla.service.Orla;
-import endafarrell.orla.service.config.OrlaConfig;
+import endafarrell.orla.service.OrlaConfig;
 import endafarrell.orla.service.data.BaseEvent;
 import endafarrell.orla.service.data.persistence.Archiver;
 import endafarrell.orla.service.data.persistence.Database;

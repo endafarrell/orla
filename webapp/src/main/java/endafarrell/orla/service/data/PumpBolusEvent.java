@@ -5,7 +5,7 @@ import org.joda.time.DateTime;
 
 
 public class PumpBolusEvent extends PumpEvent {
-    public static String EVENT_TEXT = "bolus";
+    public final static String EVENT_TEXT = "bolus";
 
     public final String type;
     public final Integer cmd;

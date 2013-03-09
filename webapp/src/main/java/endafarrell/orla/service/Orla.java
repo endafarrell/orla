@@ -1,7 +1,6 @@
 package endafarrell.orla.service;
 
 import endafarrell.orla.OrlaJsonWriter;
-import endafarrell.orla.service.config.OrlaConfig;
 import endafarrell.orla.service.data.Event;
 import endafarrell.orla.service.data.HealthGraphConsumer;
 import endafarrell.orla.service.data.persistence.Archiver;
@@ -15,7 +14,7 @@ public interface Orla extends
         HealthGraphConsumer,
         OrlaJsonWriter {
 
-    ProcessResults readSmartPix(Part part);
+    ProcessResults readSmartPix(String fileName, Part part);
 
     ProcessResults readTwitterMessages();
 

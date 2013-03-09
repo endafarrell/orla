@@ -16,8 +16,8 @@ public class OrlaImplTest {
         Orla orla = OrlaImpl.getInstance();
         Part part1 = new FilePart("src/test/resources/SmartPix/G0030950.XML");
         Part part2 = new FilePart("src/test/resources/SmartPix/G0030950.XML");
-        ProcessResults first = orla.readSmartPix(part1);
-        ProcessResults second = orla.readSmartPix(part2);
+        ProcessResults first = orla.readSmartPix("test1-G0030950.XML",part1);
+        ProcessResults second = orla.readSmartPix("test2-G0030950.XML", part2);
         assertEquals(first, second);
     }
 

@@ -26,7 +26,7 @@ public class ReducerTest {
     public void testDailyStats() throws Exception {
         Orla orla = OrlaImpl.getInstance();
         Part part = new FilePart("src/test/resources/SmartPix/G0030950.XML");
-        ProcessResults first = orla.readSmartPix(part);
+        ProcessResults first = orla.readSmartPix("test-G0030950.XML", part);
         List<Event> events = orla.getEvents();
         List<DailyStats> dailyStats = Reducer.dailyStats(events);
 

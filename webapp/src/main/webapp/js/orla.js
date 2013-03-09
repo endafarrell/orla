@@ -75,7 +75,7 @@ var flotOptions = {
     xaxis:{ mode:"time" },
     grid:{ hoverable:true, clickable:true, markings: nightAndWeekendAreas },
     yaxis:{ labelWidth:80},
-    points: { show: true },
+    points: { show: false },
     lines: { show: true },
     legend: { type: "canvas" }
 };

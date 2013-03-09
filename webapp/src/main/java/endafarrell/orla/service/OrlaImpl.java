@@ -5,7 +5,6 @@ import com.google.common.collect.Sets;
 import endafarrell.healthgraph4j.*;
 import endafarrell.orla.OrlaException;
 import endafarrell.orla.monitoring.OrlaMonitor;
-import endafarrell.orla.service.config.OrlaConfig;
 import endafarrell.orla.service.data.*;
 import endafarrell.orla.service.data.persistence.Archiver;
 import endafarrell.orla.service.data.persistence.Database;
@@ -113,10 +112,10 @@ public class OrlaImpl implements Orla {
         return getEventsList(null, null, true);
     }
 
-    public ProcessResults readSmartPix(Part part) {
+    public ProcessResults readSmartPix(String fileName, Part part) {
         System.out.println("»OrlaImpl.readSmartPix()");
         SmartpixProcessor processor = new SmartpixProcessor(this);
-        processor.setInput(part);
+        processor.setInput(fileName, part);
         ProcessResults results = processor.process();
         events = database.loadFromDB();
         return results;
