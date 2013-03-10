@@ -1,4 +1,4 @@
-<%@ page import="org.joda.time.DateTime,endafarrell.orla.service.OrlaDateTimeFormat" %><%
+<%@ page import="endafarrell.orla.service.OrlaDateTimeFormat,org.joda.time.DateTime" %><%
     String today = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now());
     String w12 = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now().minusWeeks(12));
 %><nav>&laquo;

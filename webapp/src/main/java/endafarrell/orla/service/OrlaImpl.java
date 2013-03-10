@@ -6,6 +6,7 @@ import endafarrell.healthgraph4j.*;
 import endafarrell.orla.OrlaException;
 import endafarrell.orla.monitoring.OrlaMonitor;
 import endafarrell.orla.service.data.*;
+import endafarrell.orla.service.data.jackson.PairSerializer;
 import endafarrell.orla.service.data.persistence.Archiver;
 import endafarrell.orla.service.data.persistence.Database;
 import endafarrell.orla.service.data.persistence.FileSystemArchiver;
@@ -16,13 +17,23 @@ import endafarrell.orla.service.processor.SmartpixProcessor;
 import endafarrell.orla.service.processor.TwitterProcessor;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.Version;
+import org.codehaus.jackson.map.MapperConfig;
+import org.codehaus.jackson.map.Module;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.module.SimpleModule;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
+import org.codehaus.jackson.type.TypeReference;
 import org.joda.time.DateTime;
 import org.xml.sax.SAXException;
+import twitter4j.internal.org.json.JSONException;
+import twitter4j.internal.org.json.JSONObject;
 
 import javax.servlet.http.Part;
 import javax.xml.parsers.ParserConfigurationException;
@@ -283,6 +294,65 @@ public class OrlaImpl implements Orla {
             previous = current;
         }
         outputStream.write(arrayNode.toString().getBytes());
+    }
+
+    public void writeHourlyBasalAsJson(OutputStream outputStream) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        System.out.println("»OrlaImpl.writeHourlyBasalAsJson(outputStream)");
+        List<Event> eventList = getEvents();
+        List<PumpBasalProfileConfig> basalProfileConfigs = Filter.only(eventList, PumpBasalProfileConfig.class);
+        PumpBasalProfileConfig lastBasalProfile = basalProfileConfigs.get(basalProfileConfigs.size() - 1);
+        String hourlyString = lastBasalProfile.getText();
+        ArrayNode hours = JsonNodeFactory.instance.arrayNode();
+        JsonNode hourlyJson = mapper.readTree(hourlyString);
+        System.out.println(hourlyJson);
+        for (int hour = 0; hour < 24; hour++) {
+            double basalRate = 0;
+            basalRate = hourlyJson.get(Integer.toString(hour)).asDouble();
+            hours.add(basalRate);
+        }
+        ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+        objectNode.put("daily_total", lastBasalProfile.getValue().doubleValue());
+        objectNode.put("hours", hours);
+        mapper.writeValue(outputStream, objectNode);
+    }
+
+    public void writeHourlyPercentiles(OutputStream outputStream, DateTime from, DateTime to) throws IOException {
+        List<Event> eventList = getEventsList(from,  to, false);
+        List<BloodGlucoseEvent> bgList = Filter.only(eventList, BloodGlucoseEvent.class);
+        Map<Integer, List<Double>> hoursBgList = new HashMap<Integer, List<Double>>(24);
+        for (int hour=0; hour < 24; hour++){
+            hoursBgList.put(hour, new ArrayList<Double>(150));
+        }
+        for(BloodGlucoseEvent bg: bgList) {
+            hoursBgList.get(bg.getStartTime().getHourOfDay()).add(bg.value.doubleValue());
+        }
+
+        Set<Integer> percentileLevels = Sets.newHashSet(15,25,50,75,85);
+
+        SortedMap<Integer, List<Pair<Integer, Double>>> data = new TreeMap<Integer, List<Pair<Integer, Double>>>();
+        for (Integer pl: percentileLevels) {
+            ArrayList<Pair<Integer, Double>> hourlyPercentiles = new ArrayList<Pair<Integer, Double>>(24);
+            for (int i=0; i<24; i++) {
+                hourlyPercentiles.add(null);
+            }
+            data.put(pl, hourlyPercentiles);
+        }
+
+        for (Integer hour: hoursBgList.keySet()) {
+            List<Double> hourBgList = hoursBgList.get(hour);
+            Map<Integer, Double> percentiles = Filter.percentiles(hourBgList, percentileLevels);
+
+            for(Integer pl: percentileLevels){
+                data.get(pl).set(hour, new ImmutablePair(hour, percentiles.get(pl)));
+            }
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule("Pair<Integer,Double> as [L,R]", new Version(0,0,1,null));
+        module.addSerializer(new PairSerializer(Pair.class));
+        mapper.registerModule(module);
+        mapper.writeValue(outputStream, data);
+
     }
 
     public String getHealthGraphAuthorisation() throws OrlaException {

@@ -83,6 +83,17 @@ public final class Filter {
         return percentiles;
     }
 
+    public static Map<Integer, Double> percentiles(List<Double> values, Set<Integer> percentiles) {
+        double[] vals = Convert.todoubleArray(values);
+        Map<Integer, Double> ps = new HashMap<Integer, Double>(percentiles.size());
+        Percentile percentile = new Percentile();
+        percentile.setData(vals);
+        for (Integer percentileLevel : percentiles) {
+            ps.put(percentileLevel, percentile.evaluate(percentileLevel));
+        }
+        return ps;
+    }
+
     public static List<Event> only(Collection<Event> events, Unit unit) {
         ArrayList<Event> eventList = new ArrayList<Event>(events.size());
         for (Event event : events) {

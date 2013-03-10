@@ -1,6 +1,5 @@
 package endafarrell.orla.service;
 
-import endafarrell.orla.api.OrlaHttpServlet;
 import endafarrell.orla.service.processor.ProcessResults;
 import org.testng.annotations.Test;
 

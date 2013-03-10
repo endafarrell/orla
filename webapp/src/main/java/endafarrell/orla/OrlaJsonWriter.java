@@ -15,4 +15,8 @@ public interface OrlaJsonWriter {
     void writeGlucoseReadings(OutputStream outputStream, DateTime from, DateTime to) throws IOException;
 
     void writeGlucoseOverlays(OutputStream outputStream, DateTime from, DateTime to) throws IOException;
+
+    void writeHourlyBasalAsJson(OutputStream outputStream) throws IOException;
+
+    void writeHourlyPercentiles(OutputStream outputStream, DateTime from, DateTime to) throws IOException;
 }

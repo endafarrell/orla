@@ -9,7 +9,6 @@ import org.joda.time.Minutes;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
-import java.util.TimeZone;
 
 import static org.testng.Assert.*;
 

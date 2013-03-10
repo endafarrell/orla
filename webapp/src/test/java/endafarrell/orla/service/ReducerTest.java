@@ -8,7 +8,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.servlet.http.Part;
-
 import java.util.List;
 
 public class ReducerTest {

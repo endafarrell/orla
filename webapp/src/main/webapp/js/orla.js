@@ -91,18 +91,14 @@ function showTooltip(x, y, contents) {
         opacity: 0.80
     }).appendTo("body").fadeIn(200);
 }
-function carbsFormatter(v, axis) {
-    return v.toFixed(axis.tickDecimals) +"g";
-}
-function bolusFormatter(v, axis) {
-    return v.toFixed(axis.tickDecimals) +"IU";
-}
-function carbRatioFormatter(v, axis) {
-    return v.toFixed(axis.tickDecimals) + "U/10g";
-}
-function bGFormatter(v, axis) {
-    return v.toFixed(axis.tickDecimals) + " mmol/L";
-}
+
+// Axis formatters
+function carbsFormatter(v, axis)     { return v.toFixed(axis.tickDecimals) + "g"; }
+function bolusFormatter(v, axis)     { return v.toFixed(axis.tickDecimals) + " IU"; }
+function bolusRateFormatter(v, axis) { return v.toFixed(axis.tickDecimals) + " IU/hr"; }
+function carbRatioFormatter(v, axis) { return v.toFixed(axis.tickDecimals) + " U/10g"; }
+function bGFormatter(v, axis)        { return v.toFixed(axis.tickDecimals) + " mmol/L"; }
+
 // helper for returning the weekends in a period
 function weekendAreas(axes) {
     var markings = [];
@@ -133,7 +129,10 @@ function nightAreas(axes) {
     d.setUTCHours(23);
     var i = d.getTime();
     do {
-        markings.push({ xaxis: { from: i, to: i + 8 * 60 * 60 * 1000}, color: "#dddddd"});
+        markings.push({
+            xaxis: { from: i, to: i + 8 * 60 * 60 * 1000},
+            yaxis: {from: 0, to: axes.yaxis.max * 0.05},
+            color: "#dddddd"});
         i += 24 * 60 * 60 * 1000;
     } while (i < axes.xaxis.max);
 

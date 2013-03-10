@@ -1,4 +1,4 @@
-<%@ page import="org.joda.time.DateTime,endafarrell.orla.service.OrlaDateTimeFormat"%><%
+<%
     String to = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now());
     String from = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now().minusWeeks(12));
 %><!DOCTYPE HTML>
@@ -33,7 +33,7 @@
                             <span class="unit">g carbs</span>
                         {{else clazz=="BloodGlucoseEvent"}}
                             <span class="time">${hhmm}</span>
-                            <span class="bG">${value}</span>
+                            <span class="bG">${value.toFixed(1)}</span>
                             <span class="unit">mmol/L</span>
                         {{else clazz=="TwitterEvent"}}
                             <span class="time">${hhmm}</span>

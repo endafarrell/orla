@@ -11,7 +11,7 @@
 
     <form action="<%=application.getContextPath() + SmartPixUploadServlet.URL%>"
           enctype="multipart/form-data" method="POST">
-        <input type="file" name="file" multiple=""/><br/>
+        <input type="file" name="file" multiple="" autofocus="autofocus" /><br/>
         <input type="Submit" value="Upload SmartPix data"><br>
     </form>
 </section>

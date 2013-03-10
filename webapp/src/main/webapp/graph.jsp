@@ -5,6 +5,7 @@
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery.tmpl.min.js"></script>
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery.flot.js"></script>
+    <script type="text/javascript" src="<%=application.getContextPath()%>/js/jquery.flot.fillbetween.js"></script>
     <script type="text/javascript" src="<%=application.getContextPath()%>/js/orla.js"></script>
     <link  rel="stylesheet" type="text/css" media="all" href="<%=application.getContextPath()%>/css/orla.css">
     <script type="text/javascript">
@@ -18,7 +19,7 @@
     <div class="graph">
         <h3>Glucose readings</h3>
         <p>These are the bG readings in this time-frame.</p>
-        <div id="ph0" style="width: 90%; height: 300px"></div>
+        <div id="ph0" style="width: 85%; height: 300px"></div>
     </div>
     <div class="graph">
         <h3>Mean bG</h3>
@@ -32,6 +33,19 @@
         readings here suggest stability.</p>
         <div id="pha" style="width: 85%; height: 300px"></div>
     </div>
+
+    <div class="graph">
+        <h3>Hourly basal rates</h3>
+        <p>Here are the most recent hourly basal rates: totalling <span id="basalTotal"></span> IU/day.</p>
+        <div id="hourlyBasal"></div>
+        <div id="phh" style="width: 85%; height: 300px"></div>
+    </div>
+    <div class="graph">
+        <h3>Hourly percentile values</h3>
+        <p>Here are percentiled values for each hour</p>
+        <div id="php" style="width: 85%; height: 300px"></div>
+    </div>
+
     <div class="graph">
         <h3>Daily overlay</h3>
         <p>Here are the daily readings overlaid for this time-frame.</p>
@@ -88,10 +102,57 @@
             plots.push($.plot($("#pho"), overlays,
                     $.extend(true,{},
                              flotOptions, {
+                                grid:{markings: nightAreas },
                                 yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}],
                                 legend:{show: false}
                             })));
         });
+
+        $.getJSON("<%=application.getContextPath()%>/api/home/hourlyBasal" + window.location.search, function (model) {
+            var basal = [];
+            var html = '<table width="85%">';
+            for (var index=0; index<6; index+=1){
+                html += '<tr>';
+                for (var subindex=0; subindex<24; subindex+=6){
+                    var hour = index+subindex;
+                    html+='<td width="25%" style="text-align: right">'+(hour)+":00 - "+(hour+1)+":00 " + (model.hours[hour]).toFixed(1) + " IU/hr</td>";
+                }
+                html += '</tr>'
+            }
+            html+='</table>';
+            $('#hourlyBasal').html(html);
+            $('#basalTotal').html(model["daily_total"]);
+            for (var index = 0; index < model.hours.length; index++) {
+                var dt =  new Date();
+                dt.setMinutes(0);
+                dt.setHours(index - (dt.getTimezoneOffset()/60));
+                basal.push([dt, model.hours[index]]);
+            }
+
+            plots.push($.plot($("#phh"), [{ data: basal, label: "Hourly basal rates", lines: { show: true, steps: true }}],
+                    $.extend(true,{},
+                            flotOptions, {
+                                yaxes:[{tickFormatter: bolusRateFormatter, tickDecimals:1}]}
+                    )));
+        });
+
+        $.getJSON("<%=application.getContextPath()%>/api/home/hourlyPercentiles" + window.location.search, function (model) {
+            var dataset = [
+                  { label: 'Glucose percentiles', data: model['50'], lines: { show: true }, color: "rgb(255,50,50)" },
+                  { id: 'bg15%', data: model['15'], lines: { show: true, lineWidth: 0, fill: false }, color: "rgb(255,50,50)" },
+                  { id: 'bg25%', data: model['25'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgb(255,50,50)", fillBetween: 'bg15%' },
+                  { id: 'bg50%', data: model['50'], lines: { show: true, lineWidth: 0.5, fill: 0.4, shadowSize: 0 }, color: "rgb(255,50,50)", fillBetween: 'bg25%' },
+                  { id: 'bg75%', data: model['75'], lines: { show: true, lineWidth: 0, fill: 0.4 }, color: "rgb(255,50,50)", fillBetween: 'bg50%' },
+                  { id: 'bg85%', data: model['85'], lines: { show: true, lineWidth: 0, fill: 0.2 }, color: "rgb(255,50,50)", fillBetween: 'bg75%' }
+            ];
+            plots.push($.plot($("#php"), dataset, $.extend(true, {},
+                    flotOptions, {
+                        xaxis: { mode: null, min: 0, max: 23, ticks:[2,4,6,8,10,12,14,16,18,20,22] },
+                        yaxes: [{tickFormatter: bGFormatter, tickDecimals:1}],
+                        legend: { position: 'se' }
+                    })));
+        });
+
 
         setTimeout(function(){
             for (var index = 0; index < plots.length; index++){
