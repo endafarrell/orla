@@ -258,10 +258,14 @@ public class OrlaImpl implements Orla {
 
     public void writeGlucoseReadings(OutputStream outputStream, DateTime from, DateTime to) throws IOException {
         System.out.println("»OrlaImpl.writeGlucoseReadings(outputStream,"+from+","+to+")");
-        List<Event> eventsList = getEventsList(from, to, false);
-        eventsList = Filter.only(eventsList, Unit.mmol_L);
+        List<Event> eventsList = getEventsList(from, to, true);
+        List<BloodGlucoseEvent> bGsList = Filter.only(eventsList, BloodGlucoseEvent.class);
+        int before = bGsList.size();
+        bGsList = Reducer.insertMidnights(bGsList);
+        int after = bGsList.size();
+        System.out.println("Reducer.insertMidnights added " + (after-before));
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
-        for (Event event : eventsList) {
+        for (BloodGlucoseEvent event : bGsList) {
             arrayNode.add(event.toJson());
         }
         outputStream.write(arrayNode.toString().getBytes());

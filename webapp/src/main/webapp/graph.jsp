@@ -11,16 +11,21 @@
     <script type="text/javascript">
         var plots = [];
         var previousPoint = null;
+        var bGOptions = $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]});
     </script>
+    <style>
+        div.container { width: 85%; height: 300px;}
+    </style>
 </head>
 <body>
 <%@include file="nav.jsp" %>
 <section>
-    <div class="graph">
-        <h3>Glucose readings</h3>
-        <p>These are the bG readings in this time-frame.</p>
-        <div id="ph0" style="width: 85%; height: 300px"></div>
-    </div>
+    <%--<div class="graph">--%>
+        <%--<h3>Glucose readings</h3>--%>
+        <%--<p>These are the bG readings in this time-frame.</p>--%>
+        <%--<div id="ph0" style="width: 85%; height: 300px"></div>--%>
+    <%--</div>--%>
+    <div id="weeklyBGs"></div>
     <div class="graph">
         <h3>Mean bG</h3>
         <p>These are the time-weighted average glucose readings during the day.</p>
@@ -56,12 +61,41 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $.getJSON("<%=application.getContextPath()%>/api/home/glucose" + window.location.search, function (model) {
+            var dow = {"Sun":6, "Mon":0, "Tue":1, "Wed":2, "Thu":3, "Fri":4, "Sat":5};
             var bGs = [];
+            var previousDay = 0;
+            var weekId = 0;
             for (var index = 0; index < model.length; index++) {
-                bGs.push([$.date(model[index].startTime).toDate(), model[index].value]);
+                var readingDate = $.date(model[index].startTime).toDate();
+                if (dow[model[index].day] < dow[previousDay]) {
+                    // We are back to Sunday. Close out the previous week (but include this too!)
+                    bGs.push([readingDate, model[index].value]);
+                    var cId = "#phw"+weekId;
+                    var newContainer = $("<div></div>",{id: cId, style:"width: 85%; height: 300px"});
+                    var newGraph = $("<div></div>", {class: "graph"});
+                    newGraph.append("<h3>Glucose readings</h3>");
+                    newGraph.append(newContainer);
+                    $("#weeklyBGs").append(newGraph);
+                    plots.push($.plot(newContainer, [{data:bGs, label:"bG"}], bGOptions));
+
+                    // And reset
+                    weekId++;
+                    bGs = [];
+                }
+                bGs.push([readingDate, model[index].value]);
+                previousDay = model[index].day;
+
             }
-            plots.push($.plot($("#ph0"), [bGs], $.extend(true,{}, flotOptions,{yaxes:[{tickFormatter: bGFormatter, tickDecimals:1}]})));
+
         });
+
+        <%--$.getJSON("<%=application.getContextPath()%>/api/home/glucose" + window.location.search, function (model) {--%>
+            <%--var bGs = [];--%>
+            <%--for (var index = 0; index < model.length; index++) {--%>
+                <%--bGs.push([$.date(model[index].startTime).toDate(), model[index].value]);--%>
+            <%--}--%>
+            <%--plots.push($.plot($("#ph0"), [{data:bGs, label:"bG"}], bGOptions));--%>
+        <%--});--%>
 
         $.getJSON("<%=application.getContextPath()%>/api/home/dailyStats" + window.location.search, function (model) {
             var ads = [];

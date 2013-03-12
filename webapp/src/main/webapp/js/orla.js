@@ -36,9 +36,9 @@
                 var Zh= Z.substr(1,2);
                 var Zm= Z.substr(3,2);
                 var tzhours=parseInt(Zh,10);
-                tzhours*=(Z.substr(0,1)=="+"?-1:+1);
+                tzhours*=(Z.substr(0,1)=="+"?1:-1);
                 var tzmin=parseInt(Zm,10);
-                tzmin*=(Z.substr(0,1)=="+"?-1:+1);
+                tzmin*=(Z.substr(0,1)=="+"?1:-1);
                 var hours=parseInt(h,10)+tzhours;
                 var mins=parseInt(m,10)+tzmin;
                 var sec=parseInt(s,10);
