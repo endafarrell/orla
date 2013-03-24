@@ -58,7 +58,10 @@
 })(jQuery);
 
 
-
+/**
+ * String formatting can be useful - add it if not there already.
+ * Usage: var formattedString = "My string with {0}, or {1} curly braces".format(0, "or more");
+ */
 if (!String.prototype.format) {
   String.prototype.format = function() {
     var args = arguments;
