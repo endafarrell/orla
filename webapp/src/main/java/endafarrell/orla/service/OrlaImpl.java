@@ -4,6 +4,7 @@ import com.ctc.wstx.sax.WstxSAXParserFactory;
 import com.google.common.collect.Sets;
 import endafarrell.healthgraph4j.*;
 import endafarrell.orla.OrlaException;
+import endafarrell.orla.api.home.EventsByDayServlet;
 import endafarrell.orla.monitoring.OrlaMonitor;
 import endafarrell.orla.service.data.*;
 import endafarrell.orla.service.data.jackson.PairSerializer;
@@ -31,6 +32,7 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.type.TypeReference;
 import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.xml.sax.SAXException;
 import twitter4j.internal.org.json.JSONException;
 import twitter4j.internal.org.json.JSONObject;
@@ -191,13 +193,37 @@ public class OrlaImpl implements Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
+    /**
+     * When you try to print a lot of data (5 months in the case that started this off) the UI will start to break due
+     * to JavaScript limitations. In any event, the idea that a call could cause a vast amount of data to be sent out
+     * in one go is silly, so our implementation limits the date range, and lets the caller know that there is more.
+     *
+     * @param outputStream
+     * @param from
+     * @param to
+     * @throws IOException
+     */
     public void writeEventsByDayAsJson(OutputStream outputStream, DateTime from, DateTime to) throws IOException {
         System.out.println("»OrlaImpl.writeEventsByDayAsJson(outputStream,"+from+","+to+")");
+        ObjectNode response = JsonNodeFactory.instance.objectNode();
+        response.put("next", JsonNodeFactory.instance.nullNode());
+
+        Pair<DateTime, DateTime> newFromTo = cappedFromTo(from, to, Period.months(3));
+        if (to.isAfter(newFromTo.getRight())) {
+            response.put("next", EventsByDayServlet.URL
+                    + "?from=" + OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(newFromTo.getLeft())
+                    + "&to=" + OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(to));
+            to = newFromTo.getRight();
+        }
         List<Event> eventsList = getEventsList(from, to, false);
 
-        if (eventsList == null) return;
+        if (eventsList == null) {
+            outputStream.write(response.toString().getBytes());
+            return;
+        }
 
         ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
+        response.put("days", arrayNode);
         ObjectNode dayNode = JsonNodeFactory.instance.objectNode();
         arrayNode.add(dayNode);
         ArrayNode dayEvents = JsonNodeFactory.instance.arrayNode();
@@ -243,7 +269,18 @@ public class OrlaImpl implements Orla {
             previous = event;
         }
 
-        outputStream.write(arrayNode.toString().getBytes());
+        outputStream.write(response.toString().getBytes());
+    }
+
+    private Pair<DateTime, DateTime> cappedFromTo(DateTime from, DateTime to, Period period) {
+        Pair<DateTime, DateTime> capped;
+        DateTime cap = from.plus(period);
+        if (cap.isBefore(to)) {
+            capped = new ImmutablePair<DateTime, DateTime>(cap.plusDays(1), cap);
+        } else {
+            capped = new ImmutablePair<DateTime, DateTime>(from, to);
+        }
+        return capped;
     }
 
     private List<Event> getEventsList(DateTime from, DateTime to, boolean includePreceding) {

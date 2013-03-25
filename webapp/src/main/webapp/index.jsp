@@ -76,12 +76,18 @@
         var fm = $.QueryString["from"] ? $.QueryString["from"] : "<%=from%>";
         var  t = $.QueryString["to"]   ? $.QueryString["to"]   : "<%=to%>";
 
-        $.getJSON("<%=application.getContextPath()%>/api/home/events/byDay?from="+fm+"&to="+t, function (model) {
-            var data = {days:model};
-            var newMarkup = $.tmpl("thisEventsListTemplate", data);
-            newMarkup.appendTo("#events");
-            window.scrollTo(0, document.body.scrollHeight);
-        });
+        function getEvents(url) {
+            $.getJSON(url, function (model) {
+                var data = {days:model.days};
+                var newMarkup = $.tmpl("thisEventsListTemplate", data);
+                newMarkup.appendTo("#events");
+                if (model.next) {
+                    getEvents("<%=application.getContextPath()%>"+model.next);
+                }
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+        }
+        getEvents("<%=application.getContextPath()%>/api/home/events/byDay?from="+fm+"&to="+t);
     });
 </script>
 </body>

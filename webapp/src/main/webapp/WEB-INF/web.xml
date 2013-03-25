@@ -6,7 +6,7 @@
   <display-name>orla</display-name>
     <servlet>
         <servlet-name>EventsByDay</servlet-name>
-        <servlet-class>endafarrell.orla.api.home.events.EventsByDayServlet</servlet-class>
+        <servlet-class>endafarrell.orla.api.home.EventsByDayServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>EventsByDay</servlet-name>

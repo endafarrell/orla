@@ -1,4 +1,4 @@
-package endafarrell.orla.api.home.events;
+package endafarrell.orla.api.home;
 
 import endafarrell.orla.api.OrlaHttpServlet;
 import org.apache.commons.lang3.tuple.Pair;
@@ -10,9 +10,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/api/home/events/byDay"})
+@WebServlet(urlPatterns = {EventsByDayServlet.URL})
 public class EventsByDayServlet extends OrlaHttpServlet {
-
+    public final static String URL = "/api/home/events/byDay";
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         res.setContentType("application/json");
