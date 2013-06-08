@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {EventsByDayServlet.URL})
+@WebServlet(urlPatterns = {EventsByDayServlet.URL}, name = "events by day")
 public class EventsByDayServlet extends OrlaHttpServlet {
     public final static String URL = "/api/home/events/byDay";
     @Override

@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/api/home/twitter"})
+@WebServlet(urlPatterns = {"/api/home/twitter"}, name = "update messages")
 public class TwitterTriggerServlet extends OrlaHttpServlet {
 
     @Override

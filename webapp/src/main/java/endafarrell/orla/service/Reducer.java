@@ -4,6 +4,7 @@ package endafarrell.orla.service;
 import endafarrell.orla.service.data.BloodGlucoseEvent;
 import endafarrell.orla.service.data.DailyStats;
 import endafarrell.orla.service.data.Event;
+import endafarrell.orla.service.data.HourlyStats;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
@@ -15,12 +16,44 @@ import static org.apache.commons.math.stat.StatUtils.sum;
 
 public class Reducer {
     public static final double MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
+    public static final double MILLIS_PER_HOUR =     60 * 60 * 1000;
+
+    public static List<HourlyStats> hourlyStats(List<Event> events) {
+        List<BloodGlucoseEvent> bloodGlucoses = Filter.only(events, BloodGlucoseEvent.class);
+        List<HourlyStats> hourlyStats = new ArrayList<HourlyStats>(bloodGlucoses.size());
+
+        List<Double> bgs = new ArrayList<Double>();
+        BloodGlucoseEvent previous = bloodGlucoses.remove(0);
+        bgs.add(previous.getValue().doubleValue());
+        for (BloodGlucoseEvent current : bloodGlucoses){
+            if (!current.sameHourAs(previous)) {
+                hourlyStats.add(new HourlyStats(
+                        previous.startTime,
+                        0,
+                        Convert.round(mean(Convert.todoubleArray(bgs)))
+                ));
+                bgs.clear();
+            }
+            bgs.add(current.getValue().doubleValue());
+
+            // And finally - swap the previous.
+            previous = current;
+        }
+        return hourlyStats;
+    }
 
     public static List<DailyStats> dailyStats(List<Event> events) {
         List<BloodGlucoseEvent> bloodGlucoses = Filter.only(events, BloodGlucoseEvent.class);
-        if (bloodGlucoses == null) return null;
+        if (bloodGlucoses == null) {
+            System.out.println("»Reducer.dailyStats returning null as blodGlucoses == null)");
+            return null;
+        }
         int bgOrigSize = bloodGlucoses.size();
-        if (bgOrigSize < 2) return null;
+        if (bgOrigSize < 2) {
+            System.out.println("»Reducer.dailyStats returning null as bgOrigSize == " + String.valueOf(bgOrigSize)
+                + " which is < 2!");
+            return null;
+        }
 
 
         // So - we have something with which to work. Now - to make the calculation of the "area under the graph" of
@@ -37,6 +70,7 @@ public class Reducer {
         double ascDesc = 0;
 
         BloodGlucoseEvent previous = bloodGlucoses.remove(0);
+        bgs.add(previous.getValue().doubleValue());
         for (BloodGlucoseEvent current : bloodGlucoses) {
             if (!current.sameDayAs(previous)) {
                 dailyStats.add(
@@ -47,8 +81,8 @@ public class Reducer {
                                        Convert.round(ascDesc))
                 );
                 numReadings = 0;
-                bgs = new ArrayList<Double>();
-                areas = new ArrayList<Double>();
+                bgs.clear();
+                areas.clear();
                 ascDesc = 0;
             }
             numReadings++;
@@ -65,14 +99,19 @@ public class Reducer {
 
     static double area(final BloodGlucoseEvent previous, final BloodGlucoseEvent current) {
         return area(previous.getStartTime().getMillis(), previous.getValue().doubleValue(),
-                    current.getStartTime().getMillis(), current.getValue().doubleValue());
+                    current.getStartTime().getMillis(), current.getValue().doubleValue(), MILLIS_PER_DAY);
     }
 
-    private static double area(final long w, final double nw, final long e, final double ne) {
+    static double hourArea(final BloodGlucoseEvent previous, final BloodGlucoseEvent current) {
+            return area(previous.getStartTime().getMillis(), previous.getValue().doubleValue(),
+                        current.getStartTime().getMillis(), current.getValue().doubleValue(), MILLIS_PER_HOUR);
+    }
+
+    private static double area(final long w, final double nw, final long e, final double ne, double period) {
         double rect = (e - w) * nw;
         double tri = 0.5 * (ne - nw) * (e - w);
         double poly = rect + tri;
-        return poly / MILLIS_PER_DAY;
+        return poly / period;
     }
 
     public static List<BloodGlucoseEvent> insertMidnights(final List<BloodGlucoseEvent> bloodGlucoses) {

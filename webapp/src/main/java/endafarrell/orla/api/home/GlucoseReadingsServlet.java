@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/api/home/glucose"})
+@WebServlet(urlPatterns = {"/api/home/glucose"}, name = "glucose readings")
 public class GlucoseReadingsServlet extends OrlaHttpServlet {
 
     @Override

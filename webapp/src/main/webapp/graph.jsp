@@ -222,7 +222,7 @@
 
             $.getJSON("<%=application.getContextPath()%>/api/home/hourlyPercentiles" + window.location.search, function (model) {
                 var dataset = [
-                    { label:'Glucose percentiles', data:model['50'], lines:{ show:true }, color:"rgb(255,50,50)" },
+                    { label:'Glucose percentiles\n15,25,50,75,85%', data:model['50'], lines:{ show:true }, color:"rgb(255,50,50)" },
                     { id:'bg15%', data:model['15'], lines:{ show:true, lineWidth:0, fill:false }, color:"rgb(255,50,50)" },
                     { id:'bg25%', data:model['25'], lines:{ show:true, lineWidth:0, fill:0.2 }, color:"rgb(255,50,50)", fillBetween:'bg15%' },
                     { id:'bg50%', data:model['50'], lines:{ show:true, lineWidth:0.5, fill:0.4, shadowSize:0 }, color:"rgb(255,50,50)", fillBetween:'bg25%' },

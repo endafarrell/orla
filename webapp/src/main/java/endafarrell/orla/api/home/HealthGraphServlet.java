@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
-@WebServlet(urlPatterns = {"/api/home/healthgraph"})
+@WebServlet(urlPatterns = {"/api/home/healthgraph"}, name = "update exercise records")
 public class HealthGraphServlet extends OrlaHttpServlet {
 
     @Override

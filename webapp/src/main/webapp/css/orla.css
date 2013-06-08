@@ -184,15 +184,44 @@ td.dayDetails {
 .calDate {
     color: silver;
     width: 2em;
-    font-size: 80%;
+    font-size: 70%;
     text-align: right;
     float: left;
+}
+
+.monthPrePost {
+    color: silver;
 }
 
 .graph h3 {
     padding-top: 18px;
 }
 
+.rotate {
+
+    /* Safari, Chrome */
+    -webkit-transform: rotate(-90deg);
+
+    /* Firefox */
+    -moz-transform: rotate(-90deg);
+
+    /* IE */
+    -ms-transform: rotate(-90deg);
+
+    /* Opera */
+    -o-transform: rotate(-90deg);
+
+    /* Older versions of IE */
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation = 3);
+
+    /* CSS3 standard as defined here: http://www.w3.org/TR/css3-transforms/ */
+    transform: rotate(-90deg);
+
+    /* applies to the div/span */
+    float:left;
+    background-color: #9acd32;
+
+}
 
 @media print {
     table {

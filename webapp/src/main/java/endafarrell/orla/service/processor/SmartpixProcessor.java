@@ -114,8 +114,10 @@ public class SmartpixProcessor extends ReceivingProcessor {
                     String val = attributes.getValue("Val");
                     Integer D = Integer.getInteger(attributes.getValue("D"));
                     String flg = attributes.getValue("flg");
-                    if (!"---".equals(val)) {
+                    if (!"---".equals(val) && !"HI".equals(val)) {
                         events.add(new BloodGlucoseEvent(date, new Double(val), D, flg));
+                    } else {
+                        System.out.println("An unhandled val of " + val + " was found for a BG reading");
                     }
                     String carb = attributes.getValue("Carb");
                     if (carb != null) {

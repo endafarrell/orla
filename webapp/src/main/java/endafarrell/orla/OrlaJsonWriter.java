@@ -10,6 +10,8 @@ public interface OrlaJsonWriter {
 
     void writeDailyStatsAsJson(OutputStream outputStream, DateTime from, DateTime to) throws IOException;
 
+    void writeHourlyStatsAsJson(OutputStream outputStream, DateTime from, DateTime to) throws IOException;
+
     void writeEventsByDayAsJson(OutputStream outputStream, DateTime from, DateTime to) throws IOException;
 
     void writeGlucoseReadings(OutputStream outputStream, DateTime from, DateTime to) throws IOException;

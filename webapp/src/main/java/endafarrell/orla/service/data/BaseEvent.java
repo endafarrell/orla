@@ -160,6 +160,10 @@ public abstract class BaseEvent implements Event, OrlaObject {
         return that != null && 0 == DateTimeComparator.getDateOnlyInstance().compare(this.startTime, that.getStartTime());
     }
 
+    public boolean sameHourAs(Event that){
+        return sameDayAs(that) && this.startTime.getHourOfDay() == that.getStartTime().getHourOfDay();
+    }
+
     public Unit getUnit() {
         return unit;
     }

@@ -10,13 +10,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(urlPatterns = {"/api/home/dailyStats"}, name = "daily stats")
-public class DailyStatsServlet extends OrlaHttpServlet {
+@WebServlet(urlPatterns = {"/api/home/hourlyStats"}, name = "hourly stats")
+public class HourlyStatsServlet extends OrlaHttpServlet {
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         res.setContentType("application/json");
         Pair<DateTime, DateTime> fromTo = fromTo(req);
-        orla.writeDailyStatsAsJson(res.getOutputStream(), fromTo.getLeft(), fromTo.getRight());
+        orla.writeHourlyStatsAsJson(res.getOutputStream(), fromTo.getLeft(), fromTo.getRight());
     }
 }

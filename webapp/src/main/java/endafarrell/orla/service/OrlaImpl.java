@@ -193,6 +193,17 @@ public class OrlaImpl implements Orla {
         outputStream.write(arrayNode.toString().getBytes());
     }
 
+    public void writeHourlyStatsAsJson(OutputStream outputStream, DateTime from, DateTime to) throws IOException {
+        System.out.println("»OrlaImpl.writeHourlyStatsAsJson(outputStream,"+from+","+to+")");
+                List<Event> eventsList = getEventsList(from, to, true);
+                List<HourlyStats> hourlyStats = Reducer.hourlyStats(eventsList);
+                ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
+                for (HourlyStats hourlyStat : hourlyStats) {
+                    arrayNode.add(hourlyStat.toJson());
+                }
+                outputStream.write(arrayNode.toString().getBytes());
+    }
+
     /**
      * When you try to print a lot of data (5 months in the case that started this off) the UI will start to break due
      * to JavaScript limitations. In any event, the idea that a call could cause a vast amount of data to be sent out

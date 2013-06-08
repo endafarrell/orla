@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-@WebServlet(urlPatterns = {SmartPixUploadServlet.URL}, name = "SmartPix data file upload")
+@WebServlet(urlPatterns = {SmartPixUploadServlet.URL}, name = "upload Smartpix")
 @MultipartConfig(
         location = SmartPixUploadServlet.FILE_UPLOAD_LOCATION,
         fileSizeThreshold = 1024 * 1024,
