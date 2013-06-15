@@ -335,7 +335,7 @@ function setDailyByHour(earliest, latest, container, idPrefix) {
     var earliestDate = $.date(earliest, "YYYY-MM-dd").toDate();
     var latestDate = $.date(latest, "YYYY-MM-dd").toDate();
     console.log("setDailyByHour", earliest, earliestDate, latest, latestDate);
-    var html = '<table class="calendar">\n<thead>\n<tr><th></th>\n';
+    var html = '<table class="calendar bottom">\n<thead>\n<tr><th></th>\n';
     for (var i = 0; i < 24; i++) {
         html += '<th';
         html += '>' + i + '<\/th>\n';

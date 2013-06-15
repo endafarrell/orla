@@ -173,6 +173,10 @@ td.dayDetails {
     padding-bottom: 12px;
 }
 
+table.bottom tr {
+    border-bottom: 1px solid silver;
+}
+
 .calBG {
     width: 5em;
     text-align: right;
