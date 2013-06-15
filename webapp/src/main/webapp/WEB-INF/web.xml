@@ -4,12 +4,4 @@
 
 <web-app>
   <display-name>orla</display-name>
-    <servlet>
-        <servlet-name>EventsByDay</servlet-name>
-        <servlet-class>endafarrell.orla.api.home.EventsByDayServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>EventsByDay</servlet-name>
-        <url-pattern>/api/home/events/byDay</url-pattern>
-    </servlet-mapping>
 </web-app>
