@@ -55,7 +55,7 @@
 
             <p>Here are the most recent hourly basal rates: totalling <span id="basalTotal"></span> IU/day.</p>
 
-            <div id="hourlyBasal"></div>
+            <div id="hourlyBasal" style="width: 85%;"style="width: 85%; ></div>
             <div id="phh" style="width: 85%; height: 300px"></div>
         </div>
         <div class="graph">
@@ -186,17 +186,12 @@
 
             $.getJSON("<%=application.getContextPath()%>/api/home/hourlyBasal" + window.location.search, function (model) {
                 var basal = [];
-                var html = '<table width="85%">';
-                for (index = 0; index < 6; index++) {
-                    html += '<tr>';
-                    for (var subindex = 0; subindex < 24; subindex += 6) {
-                        var hour = index + subindex;
-                        //noinspection JSUnresolvedVariable
-                        html += '<td width="25%" style="text-align: right">' + (hour) + ":00 - " + (hour + 1) + ":00 " + (model.hours[hour]).toFixed(2) + " IU/hr</td>";
-                    }
-                    html += '</tr>'
+                var html = "";
+                for (var hour = 0; hour < 24; hour++) {
+                    html += (hour < 10 ? "&nbsp;" : "") + hour
+                            + " "
+                            + (model.hours[hour]).toFixed(2) + " <br/>";
                 }
-                html += '</table>';
                 $('#hourlyBasal').html(html);
                 $('#basalTotal').html(model["daily_total"]);
                 //noinspection JSUnresolvedVariable

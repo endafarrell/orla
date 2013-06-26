@@ -169,8 +169,12 @@ td.dayDetails {
     background-repeat: repeat;
 }
 
-.calendar {
+table.calendar {
     padding-bottom: 12px;
+}
+
+table.bottom tr {
+    border-bottom: 1px solid silver;
 }
 
 .calBG {
@@ -231,6 +235,10 @@ td.dayDetails {
     .graph, tr {
         page-break-inside: avoid;
         page-break-after: auto
+    }
+
+    .calendar {
+        font-size: 80%;
     }
 
     thead {

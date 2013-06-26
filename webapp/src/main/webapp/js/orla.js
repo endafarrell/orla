@@ -335,7 +335,7 @@ function setDailyByHour(earliest, latest, container, idPrefix) {
     var earliestDate = $.date(earliest, "YYYY-MM-dd").toDate();
     var latestDate = $.date(latest, "YYYY-MM-dd").toDate();
     console.log("setDailyByHour", earliest, earliestDate, latest, latestDate);
-    var html = '<table class="calendar">\n<thead>\n<tr><th></th>\n';
+    var html = '<p style="page-break-before: always" /><table class="calendar bottom">\n<thead>\n<tr><th></th>\n';
     for (var i = 0; i < 24; i++) {
         html += '<th';
         html += '>' + i + '<\/th>\n';
@@ -348,7 +348,7 @@ function setDailyByHour(earliest, latest, container, idPrefix) {
             (currentDate.getMonth()<9 ? '-0' : '-') + (currentDate.getMonth()+1) +
             (currentDate.getDate()<10 ? '-0' : '-') + currentDate.getDate();
 
-        html += '<tr id="'+id+'"><td>'+currentDate.toDateString()+'</td>';
+        html += '<tr id="'+id+'"><td>'+currentDate.toDateString().replace("2013","").replace(/ /g, "&nbsp;")+'</td>';
         for (var hour = 0; hour < 24; hour++){
             html += '<td>&nbsp;</td>';
         }
@@ -357,6 +357,12 @@ function setDailyByHour(earliest, latest, container, idPrefix) {
         // move along to the next day, be careful with daylight savings
         currentDate.setTime(currentDate.getTime() + 86400000);
     }
+    html += '<tr><th>&nbsp;</th>';
+    for (var i = 0; i < 24; i++) {
+        html += '<th';
+        html += '>' + i + '<\/th>\n';
+    }
+    html += '</tr></table>';
     container.append($(html));
 };
 
