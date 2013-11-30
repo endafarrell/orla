@@ -71,49 +71,8 @@ public class SQLite3 extends Database {
 
 
     public HashSet<Event> loadFromDB() {
-        StringBuilder sql = new StringBuilder();
         try {
-//            Statement stmt = this.connection.createStatement();
-//            sql.append("SELECT utc, source, text, value, unit from events;");
-//            ResultSet resultSet = stmt.executeQuery(sql.toString());
             HashSet<Event> events = new HashSet<Event>(5000);
-//            while (resultSet.next()) {
-//                DateTime date;
-//                date = FULL_yyyyMMddHHmmssSSS.parseDateTime(resultSet.getString("utc"));
-//                double dValue = resultSet.getDouble("value");
-//                int iValue = resultSet.getInt("value");
-//                String text = resultSet.getString("text");
-//                Source source = Source.valueOf(resultSet.getString("source"));
-//                Unit unit = Unit.valueOf(resultSet.getString("unit"));
-//                Integer D = null;
-//                // not implemented
-//                String flg = null;
-//                // not implemented
-//
-//                switch (source) {
-//                    case Twitter:
-//                        TwitterEvent twitterEvent = new TwitterEvent(date, text);
-//                        events.add(twitterEvent);
-//                        break;
-//                    case SmartPix:
-//                        switch (unit) {
-//                            case mmol_L:
-//                                BloodGlucoseEvent bloodGlucoseEvent = new BloodGlucoseEvent(date, dValue, D, flg);
-//                                events.add(bloodGlucoseEvent);
-//                                break;
-//                            default:
-//                                CarbEvent baseEvent = new CarbEvent(date, iValue, D, flg);
-//                                events.add(baseEvent);
-//                        }
-//                        break;
-//                    case Endomondo:
-//                        SportEvent sportEvent = new SportEvent(date, Source.Endomondo, text, dValue, Unit.km);
-//                        events.add(sportEvent);
-//                    default:
-//                        throw new IllegalStateException();
-//
-//                }
-//            }
 
             PreparedStatement statement = this.connection.prepareStatement("SELECT kvkey, clazz, kvvalue FROM ekv;");
             ResultSet resultSet = statement.executeQuery();
@@ -121,13 +80,12 @@ public class SQLite3 extends Database {
                 String kvkey = resultSet.getString("kvkey");
                 String clazz = resultSet.getString("clazz");
                 String kvvalue = resultSet.getString("kvvalue");
-//                BaseEvent event = BaseEvent.factory(kvkey, clazz, kvvalue);
                 Event event = EventFactory.create(kvkey, clazz, kvvalue);
                 events.add(event);
             }
             return events;
         } catch (SQLException e) {
-            throw new IllegalStateException(sql.toString(), e);
+            throw new IllegalStateException("\"SELECT kvkey, clazz, kvvalue FROM ekv;\" has thrown an exception.", e);
         }
     }
 }

@@ -1,4 +1,4 @@
-<%
+<%@ page isELIgnored ="true" %><%
     String to = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now());
     String from = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now().minusWeeks(12));
 %><!DOCTYPE HTML>
@@ -12,7 +12,8 @@
 
     <script id="eventsByDayListTmpl" type="text/x-jquery-tmpl">
         <table class="day">
-            {{each days}}{{if events.length}}
+            {{each(index, item) days}}
+            {{if events.length}}
             <tr class="day ${day}" id="events_${date}">
                 <td class="day ${day}">
                     <table>
@@ -79,8 +80,7 @@
         function getEvents(url) {
             $.getJSON(url, function (model) {
                 var data = {days:model.days};
-                var newMarkup = $.tmpl("thisEventsListTemplate", data);
-                newMarkup.appendTo("#events");
+                $("#eventsByDayListTmpl").tmpl(data).appendTo("#events");
                 if (model.next) {
                     getEvents("<%=application.getContextPath()%>"+model.next);
                 }
