@@ -1,0 +1,1 @@
+Some advice in http://blog.interlinked.org/programming/clojure_rest.html
