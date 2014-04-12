@@ -23,10 +23,10 @@
     </reporting>
     <dependencies>
         <!--<dependency>-->
-            <!--<groupId>javax.servlet</groupId>-->
-            <!--<artifactId>javax.servlet-api</artifactId>-->
-            <!--<version>3.1-b02</version>-->
-            <!--<scope>provided</scope>-->
+        <!--<groupId>javax.servlet</groupId>-->
+        <!--<artifactId>javax.servlet-api</artifactId>-->
+        <!--<version>3.1-b02</version>-->
+        <!--<scope>provided</scope>-->
         <!--</dependency>-->
         <dependency>
             <groupId>javax</groupId>
@@ -112,27 +112,74 @@
             <artifactId>guava</artifactId>
             <version>14.0</version>
         </dependency>
+        <!--jsp support for jetty, add the 2 following -->
+        <dependency>
+            <!--http://stackoverflow.com/questions/4235082/configuring-jetty-jsp-support-in-embedded-mode-in-maven-project-->
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jsp-2.1</artifactId>
+            <version>6.1.14</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <!--http://stackoverflow.com/questions/4235082/configuring-jetty-jsp-support-in-embedded-mode-in-maven-project-->
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jsp-api-2.1</artifactId>
+            <version>6.1.14</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <version>6.1.26</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>orla</finalName>
         <plugins>
             <plugin>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>maven-jetty-plugin</artifactId>
-                <version>6.1.10</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.4</version>
                 <configuration>
-                    <scanIntervalSeconds>10</scanIntervalSeconds>
-                    <stopKey>foo</stopKey>
-                    <stopPort>9999</stopPort>
-                    <contextPath>${project.build.finalName}</contextPath>
-                    <connectors>
-                        <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
-                            <port>8081</port>
-                            <maxIdleTime>60000</maxIdleTime>
-                        </connector>
-                    </connectors>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
+            <plugin>
+                <!--http://simplericity.com/2009/11/10/1257880778509.html-->
+                <!--http://stackoverflow.com/questions/2458440/executable-war-file-that-starts-jetty-without-maven-->
+                <groupId>org.simplericity.jettyconsole</groupId>
+                <artifactId>jetty-console-maven-plugin</artifactId>
+                <version>1.54</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>createconsole</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <additionalDependencies>
+                        <additionalDependency>
+                            <artifactId>jetty-console-log4j-plugin</artifactId>
+                        </additionalDependency>
+                        <additionalDependency>
+                            <artifactId>jetty-console-requestlog-plugin</artifactId>
+                        </additionalDependency>
+                        <additionalDependency>
+                            <artifactId>jetty-console-gzip-plugin</artifactId>
+                        </additionalDependency>
+                        <!--<additionalDependency>-->
+                            <!--<artifactId>jetty-console-ajp-plugin</artifactId>-->
+                        <!--</additionalDependency>-->
+                        <!--<additionalDependency>-->
+                            <!--<artifactId>jetty-console-startstop-plugin</artifactId>-->
+                        <!--</additionalDependency>-->
+                    </additionalDependencies>
+                </configuration>
+            </plugin>
+
         </plugins>
+        <!--TODO: http://mojo.codehaus.org/osxappbundle-maven-plugin/-->
     </build>
 </project>
