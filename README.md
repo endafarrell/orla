@@ -1,4 +1,6 @@
 orla
 ====
 
-A simple diabetes management program
+A simple diabetes management program.
+
+

@@ -24,6 +24,8 @@ public class FilePart implements Part {
         return this.file.getName();
     }
 
+    public String getSubmittedFileName() { return this.file.getName(); }
+
     public long getSize() {
         return this.file.length();
     }
