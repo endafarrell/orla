@@ -348,7 +348,7 @@ function setDailyByHour(earliest, latest, container, idPrefix) {
             (currentDate.getMonth()<9 ? '-0' : '-') + (currentDate.getMonth()+1) +
             (currentDate.getDate()<10 ? '-0' : '-') + currentDate.getDate();
 
-        html += '<tr id="'+id+'"><td>'+currentDate.toDateString().replace("2013","").replace(/ /g, "&nbsp;")+'</td>';
+        html += '<tr id="'+id+'"><td>'+currentDate.toDateString().replace("2014","").replace(/ /g, "&nbsp;")+'</td>';
         for (var hour = 0; hour < 24; hour++){
             html += '<td>&nbsp;</td>';
         }

@@ -48,7 +48,7 @@
                             <span class="unit">IU</span>
                         {{else clazz=="SportEvent"}}
                             <span class="time">${hhmm}</span>
-                            <span>${text}</span>
+                            <span class="sport">${text}</span>
                         {{else}}
                             <span class="time">${hhmm}</span>
                             <span>&laquo;${text}&nbsp;&bull;&nbsp;</span>

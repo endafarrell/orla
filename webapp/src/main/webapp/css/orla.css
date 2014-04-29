@@ -156,6 +156,11 @@ tr.day td {
     padding-right:5px;
 }
 
+.sport:before {
+    content:url(../img/running.png);
+    padding-right:5px;
+}
+
 .time {
     font-size:80%;
     color:silver;
