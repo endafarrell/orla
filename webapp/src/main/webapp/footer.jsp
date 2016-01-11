@@ -1,6 +1,6 @@
 <%@ page import="endafarrell.orla.service.OrlaDateTimeFormat,org.joda.time.DateTime,endafarrell.orla.api.sys.ConfigServlet" %><%
     String today = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now());
-    String w12 = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now().minusWeeks(12));
+    String w12 = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now().minusWeeks(16));
 %><nav>&laquo;
     <ul>
         <li><a rel="home" href="<%=application.getContextPath()%>/">home</a></li>

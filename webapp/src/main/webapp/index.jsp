@@ -1,6 +1,6 @@
 <%@ page isELIgnored ="true" %><%
     String to = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now());
-    String from = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now().minusWeeks(12));
+    String from = OrlaDateTimeFormat.PRETTY_yyyyMMdd.print(DateTime.now().minusWeeks(16));
 %><!DOCTYPE HTML>
 <html>
 <head>
