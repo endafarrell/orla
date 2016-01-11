@@ -72,7 +72,7 @@ public class SQLite3 extends Database {
 
     public HashSet<Event> loadFromDB() {
         try {
-            HashSet<Event> events = new HashSet<Event>(5000);
+            HashSet<Event> events = new HashSet<Event>(50000);
 
             PreparedStatement statement = this.connection.prepareStatement("SELECT kvkey, clazz, kvvalue FROM ekv;");
             ResultSet resultSet = statement.executeQuery();
@@ -83,6 +83,8 @@ public class SQLite3 extends Database {
                 Event event = EventFactory.create(kvkey, clazz, kvvalue);
                 events.add(event);
             }
+            System.out.println("»SQLite3.loadFromDB() has " + events.size() + " events«");
+
             return events;
         } catch (SQLException e) {
             throw new IllegalStateException("\"SELECT kvkey, clazz, kvvalue FROM ekv;\" has thrown an exception.", e);

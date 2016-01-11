@@ -12,6 +12,8 @@ public final class EventFactory {
             return PumpBasalEvent.factory(kvkey, kvvalue);
         } else if (PumpBolusEvent.class.getSimpleName().equals(clazz)) {
             return PumpBolusEvent.factory(kvkey, kvvalue);
+        } else if (BolusEvent.class.getSimpleName().equals(clazz)) {
+            return BolusEvent.factory(kvkey, kvvalue);
         } else if (PumpDailyDoseEvent.class.getSimpleName().equals(clazz)) {
             return PumpDailyDoseEvent.factory(kvkey, kvvalue);
         } else if (PumpEvent.class.getSimpleName().equals(clazz)) {

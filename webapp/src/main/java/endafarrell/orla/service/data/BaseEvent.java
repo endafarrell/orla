@@ -235,7 +235,7 @@ public abstract class BaseEvent implements Event, OrlaObject {
         try {
             node = MAPPER.readTree(kvvalue);
         } catch (IOException e) {
-            throw new IllegalArgumentException(e);
+            throw new IllegalArgumentException("Caused by this kvvalue:\n" + kvvalue + "\n", e);
         }
         String id = null;
         JsonNode idNode = node.get("id");

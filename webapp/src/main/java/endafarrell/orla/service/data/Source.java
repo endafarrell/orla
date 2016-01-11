@@ -6,4 +6,5 @@ public enum Source {
     Endomondo,
     RunKeeper,
     Orla,
+    Manual
 }

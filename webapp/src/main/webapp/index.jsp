@@ -46,6 +46,10 @@
                             <span class="time">${hhmm}</span>
                             <span>${value}</span>
                             <span class="unit">IU</span>
+                        {{else clazz=="BolusEvent"}}
+                            <span class="time">${hhmm}</span>
+                            <span>${value}</span>
+                            <span class="unit">~IU</span>
                         {{else clazz=="SportEvent"}}
                             <span class="time">${hhmm}</span>
                             <span class="sport">${text}</span>
